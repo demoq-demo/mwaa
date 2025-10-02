@@ -8,21 +8,32 @@ For MWAA environments with `PRIVATE_ONLY` web server access, Python dependency m
 
 ```mermaid
 graph TB
-    subgraph "🏢 On-Premises Current State"
-        A[🔧 Airflow Workers] --> N[📦 Nexus Repository]
-        B[⏰ Airflow Schedulers] --> N
-        C[🌐 Airflow Webserver] --> N
-        N --> P[🐍 Python Packages]
-    end
+    A[🔧 Airflow Workers<br/>🏢 On-Premises Current State]
+    B[⏰ Airflow Schedulers<br/>🏢 On-Premises Current State]
+    C[🌐 Airflow Webserver<br/>🏢 On-Premises Current State]
+    N[📦 Nexus Repository<br/>🏢 On-Premises Current State]
+    P[🐍 Python Packages<br/>🏢 On-Premises Current State]
     
-    subgraph "☁️ MWAA Target State"
-        MW[🔧 MWAA Workers] --> S3[📦 S3 Bucket]
-        MS[⏰ MWAA Schedulers] --> S3
-        MWS[🌐 MWAA Webserver<br/>🔒 PRIVATE_ONLY] -.-> VE[🔗 VPC Endpoints]
-        VE -.-> NR[📦 Nexus Repository<br/>🏢 On-Premises]
-        S3 --> PP[🐍 Python Packages<br/>📄 requirements.txt]
-        S3 --> PZ[🔌 plugins.zip]
-    end
+    MW[🔧 MWAA Workers<br/>☁️ MWAA Target State]
+    MS[⏰ MWAA Schedulers<br/>☁️ MWAA Target State]
+    MWS[🌐 MWAA Webserver<br/>🔒 PRIVATE_ONLY<br/>☁️ MWAA Target State]
+    VE[🔗 VPC Endpoints<br/>☁️ MWAA Target State]
+    S3[📦 S3 Bucket<br/>☁️ MWAA Target State]
+    NR[📦 Nexus Repository<br/>🏢 On-Premises<br/>☁️ MWAA Target State]
+    PP[🐍 Python Packages<br/>📄 requirements.txt<br/>☁️ MWAA Target State]
+    PZ[🔌 plugins.zip<br/>☁️ MWAA Target State]
+    
+    A -->|📦 Package Request| N
+    B -->|📦 Package Request| N
+    C -->|📦 Package Request| N
+    N -->|🐍 Provide Packages| P
+    
+    MW -->|📦 Package Request| S3
+    MS -->|📦 Package Request| S3
+    MWS -.->|🔗 Optional Connection| VE
+    VE -.->|🏢 Hybrid Access| NR
+    S3 -->|📄 Dependencies| PP
+    S3 -->|🔌 Custom Code| PZ
     
     %% Styling for colorful appearance
     style A fill:#ff6b6b,stroke:#ff4757,stroke-width:3px,color:#fff
