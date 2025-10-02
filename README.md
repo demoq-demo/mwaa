@@ -433,13 +433,23 @@ sequenceDiagram
 **Implementation Steps:**
 ```mermaid
 flowchart TD
-    A[Design VPC Endpoint Service] --> B[Deploy Network Load Balancer<br/>in AWS Account]
-    B --> C[Configure VPC Endpoint Service<br/>with NLB as target]
-    C --> D[Create VPC Endpoint in MWAA VPC<br/>pointing to Endpoint Service]
-    D --> E[Configure DNS resolution<br/>for Nexus hostname]
-    E --> F[Update MWAA requirements.txt<br/>to use Nexus URL]
-    F --> G[Test Nexus Connectivity<br/>from MWAA]
-    G --> H[Production Migration]
+    A[🎨 Design VPC Endpoint Service<br/>📐 Architecture planning<br/>🔧 Service specifications] --> B[⚖️ Deploy Network Load Balancer<br/>🌐 AWS Account setup<br/>🎯 Target configuration]
+    B --> C[🔌 Configure VPC Endpoint Service<br/>🔗 NLB as target<br/>🛡️ Security policies]
+    C --> D[🔗 Create VPC Endpoint in MWAA VPC<br/>📍 Endpoint Service connection<br/>🏠 Private subnet placement]
+    D --> E[🌐 Configure DNS resolution<br/>📋 Nexus hostname mapping<br/>🔍 Route 53 setup]
+    E --> F[📝 Update MWAA requirements.txt<br/>🔗 Nexus URL configuration<br/>📦 Package source update]
+    F --> G[🧪 Test Nexus Connectivity<br/>🔍 Connection validation<br/>📊 Performance testing]
+    G --> H[🚀 Production Migration<br/>✅ Go-live deployment<br/>🎉 Success celebration]
+    
+    %% Vibrant color styling for visual appeal
+    style A fill:#ff6b6b,stroke:#ff4757,stroke-width:4px,color:#fff
+    style B fill:#4ecdc4,stroke:#26d0ce,stroke-width:3px,color:#fff
+    style C fill:#45b7d1,stroke:#3742fa,stroke-width:3px,color:#fff
+    style D fill:#96ceb4,stroke:#6c5ce7,stroke-width:3px,color:#fff
+    style E fill:#feca57,stroke:#ff9f43,stroke-width:3px,color:#fff
+    style F fill:#ff9ff3,stroke:#f368e0,stroke-width:3px,color:#fff
+    style G fill:#fd79a8,stroke:#e84393,stroke-width:3px,color:#fff
+    style H fill:#2ed573,stroke:#20bf6b,stroke-width:4px,color:#fff
 ```
 
 ## Implementation Details
@@ -789,14 +799,14 @@ graph TB
     CLI -->|🚀 Automated Deploy| S3BUCKET
     CLI -->|📝 Log Access| LOGGROUP
     
-    classDef dev fill:#FF6B6B,stroke:#FF4757,stroke-width:3px,color:#fff
-    classDef s3 fill:#4ECDC4,stroke:#26D0CE,stroke-width:3px,color:#fff
-    classDef scheduler fill:#45B7D1,stroke:#3742FA,stroke-width:3px,color:#fff
-    classDef webserver fill:#96CEB4,stroke:#6C5CE7,stroke-width:3px,color:#fff
-    classDef worker fill:#FECA57,stroke:#FF9F43,stroke-width:3px,color:#fff
-    classDef runtime fill:#FF9FF3,stroke:#F368E0,stroke-width:3px,color:#fff
-    classDef logs fill:#54A0FF,stroke:#2F3542,stroke-width:3px,color:#fff
-    classDef access fill:#5F27CD,stroke:#341F97,stroke-width:3px,color:#fff
+    classDef dev fill:#FF6B6B,stroke:#FF4757,stroke-width:4px,color:#fff
+    classDef s3 fill:#4ECDC4,stroke:#26D0CE,stroke-width:4px,color:#fff
+    classDef scheduler fill:#45B7D1,stroke:#3742FA,stroke-width:4px,color:#fff
+    classDef webserver fill:#96CEB4,stroke:#6C5CE7,stroke-width:4px,color:#fff
+    classDef worker fill:#FECA57,stroke:#FF9F43,stroke-width:4px,color:#fff
+    classDef runtime fill:#FF9FF3,stroke:#F368E0,stroke-width:4px,color:#fff
+    classDef logs fill:#54A0FF,stroke:#2F3542,stroke-width:4px,color:#fff
+    classDef access fill:#5F27CD,stroke:#341F97,stroke-width:4px,color:#fff
 ```
 
 ### 🔍 **Key Benefits Highlighted in Architecture:**
