@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-For MWAA environments with `PRIVATE_ONLY` web server access, Python dependency management requires specific approaches due to network isolation constraints. This document outlines best practices and architectural solutions for customer's migration from on-premises Airflow to MWAA.
+For MWAA environments with `PRIVATE_ONLY` web server access, Python dependency management requires specific approaches due to network isolation constraints. This document outlines best practices and architectural solutions for enterprise migration from on-premises Airflow to MWAA.
 
 ## Current Architecture Analysis
 
@@ -52,7 +52,7 @@ graph TB
         end
         
         subgraph "S3 Service"
-            S3[S3 Bucket<br/>mwaa-dependencies-customer]
+            S3[S3 Bucket<br/>mwaa-dependencies-<company>]
             REQ[requirements.txt]
             PLUG[plugins.zip]
             CONST[constraints.txt]
@@ -130,7 +130,7 @@ sequenceDiagram
 **S3 Bucket Requirements:**
 ```yaml
 # S3 Bucket Configuration
-BucketName: mwaa-dependencies-customer-prod
+BucketName: mwaa-dependencies-<company>-prod
 Region: us-east-1  # Same as MWAA
 Encryption: AES-256
 Versioning: Enabled
@@ -157,7 +157,7 @@ PublicAccess: Blocked
         "s3:GetObject",
         "s3:GetObjectVersion"
       ],
-      "Resource": "arn:aws:s3:::mwaa-dependencies-customer-prod/*"
+      "Resource": "arn:aws:s3:::mwaa-dependencies-<company>-prod/*"
     },
     {
       "Effect": "Allow",
@@ -165,7 +165,7 @@ PublicAccess: Blocked
         "AWS": "arn:aws:iam::ACCOUNT:role/service-role/AmazonMWAA-MyEnvironment-XXXXX"
       },
       "Action": "s3:ListBucket",
-      "Resource": "arn:aws:s3:::mwaa-dependencies-customer-prod"
+      "Resource": "arn:aws:s3:::mwaa-dependencies-<company>-prod"
     }
   ]
 }
@@ -176,7 +176,7 @@ PublicAccess: Blocked
 MWAAEnvironment:
   Type: AWS::MWAA::Environment
   Properties:
-    Name: customer-mwaa-prod
+    Name: <company>-mwaa-prod
     SourceBucketArn: !GetAtt MWAADependenciesBucket.Arn
     RequirementsS3Path: requirements.txt
     PluginsS3Path: plugins.zip
@@ -207,11 +207,11 @@ S3VPCEndpoint:
 **Option A: Developer Laptop (Manual)**
 ```bash
 # Developer workflow
-aws s3 cp requirements.txt s3://mwaa-dependencies-customer-prod/
-aws s3 cp plugins.zip s3://mwaa-dependencies-customer-prod/
+aws s3 cp requirements.txt s3://mwaa-dependencies-<company>-prod/
+aws s3 cp plugins.zip s3://mwaa-dependencies-<company>-prod/
 
 # Update MWAA environment
-aws mwaa update-environment --name customer-mwaa-prod
+aws mwaa update-environment --name <company>-mwaa-prod
 ```
 
 **Option B: CI/CD Pipeline (Recommended)**
@@ -224,9 +224,9 @@ phases:
       - echo "Building Python dependencies"
       - pip wheel -r requirements.txt -w wheels/
       - zip -r plugins.zip plugins/
-      - aws s3 cp requirements.txt s3://mwaa-dependencies-customer-prod/
-      - aws s3 cp plugins.zip s3://mwaa-dependencies-customer-prod/
-      - aws mwaa update-environment --name customer-mwaa-prod
+      - aws s3 cp requirements.txt s3://mwaa-dependencies-<company>-prod/
+      - aws s3 cp plugins.zip s3://mwaa-dependencies-<company>-prod/
+      - aws mwaa update-environment --name <company>-mwaa-prod
 ```
 
 **Option C: Lambda-based Automation**
@@ -240,10 +240,10 @@ def lambda_handler(event, context):
     
     # Download from Git, build dependencies
     # Upload to S3
-    s3.upload_file('requirements.txt', 'mwaa-dependencies-customer-prod', 'requirements.txt')
+    s3.upload_file('requirements.txt', 'mwaa-dependencies-<company>-prod', 'requirements.txt')
     
     # Update MWAA
-    mwaa.update_environment(Name='customer-mwaa-prod')
+    mwaa.update_environment(Name='<company>-mwaa-prod')
 ```
 
 **Implementation:**
@@ -257,23 +257,23 @@ def lambda_handler(event, context):
 **Detailed Architecture Flow:**
 ```mermaid
 graph TB
-    subgraph "AWS - MWAA VPC (customer Account)"
+    subgraph "AWS - MWAA VPC (<company> Account)"
         MW[MWAA Workers]
         MS[MWAA Schedulers] 
         MWS[MWAA Web Server<br/>PRIVATE_ONLY]
-        VPE[VPC Endpoint<br/>nexus.customer.com]
+        VPE[VPC Endpoint<br/>nexus.<company>.com]
     end
     
-    subgraph "AWS - Service Account (customer)"
+    subgraph "AWS - Service Account (<company>)"ount (customer)"
         VPES[VPC Endpoint Service]
         NLB[Network Load Balancer<br/>Target: On-premises Nexus]
         DX[Direct Connect Gateway<br/>or VPN Connection]
     end
     
-    subgraph "On-Premises - customer Data Center"
+    subgraph "On-Premises - <company> Data Center"
         FW[Corporate Firewall]
-        NR[Nexus Repository<br/>nexus.customer.local:8081]
-        DNS[Internal DNS<br/>nexus.customer.com]
+        NR[Nexus Repository<br/>nexus.<company>.local:8081]
+        DNS[Internal DNS<br/>nexus.<company>.com]
     end
     
     MW --> VPE
