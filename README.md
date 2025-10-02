@@ -583,25 +583,6 @@ flowchart TD
 - Consider Regional vs AZ endpoints
 - Optimize for usage patterns
 
-## Migration Timeline
-
-```mermaid
-gantt
-    title MWAA Migration Timeline
-    dateFormat  YYYY-MM-DD
-    section Phase 1
-    Dependency Audit           :done, audit, 2024-01-01, 2024-01-15
-    S3 Setup                  :done, s3setup, 2024-01-15, 2024-01-30
-    Local Testing             :active, testing, 2024-01-30, 2024-02-15
-    section Phase 2
-    MWAA Deployment           :deploy, 2024-02-15, 2024-03-01
-    Production Migration      :prod, 2024-03-01, 2024-03-15
-    section Phase 3
-    VPC Endpoint Design       :vpc, 2024-03-15, 2024-04-01
-    Nexus Integration         :nexus, 2024-04-01, 2024-04-30
-```
-
-
 
 ### 🔍 How to Discover Pre-installed Packages
 
@@ -824,7 +805,7 @@ The key to success is thorough testing with aws-mwaa-local-runner and careful de
 
 ### Web Server API Access from On-Premises
 
-**Question:** How can on-premises applications trigger REST API on the MWAA web server when workers are in private VPC with Transit Gateway connectivity?
+## ** How can on-premises applications trigger REST API on the MWAA web server when workers are in private VPC with Transit Gateway connectivity?
 
 ## 🏗️ **Network Architecture Overview**
 
