@@ -862,6 +862,8 @@ The key to success is thorough testing with aws-mwaa-local-runner and careful de
 
 ### Web Server API Access from On-Premises
 
+## **How can on-premises applications trigger REST API on the MWAA web server when workers are in private VPC with Transit Gateway connectivity?**
+
 ## 🏗️ **Network Architecture Overview - Transit Gateway Solution**
 
 ```mermaid
