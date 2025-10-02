@@ -367,16 +367,27 @@ def list_installed_packages():
 
 ```mermaid
 flowchart TD
-    A[Audit Current Dependencies] --> B[Create requirements.txt]
-    B --> C[Test with aws-mwaa-local-runner]
-    C --> D[Upload to S3]
-    D --> E[Deploy MWAA Environment]
-    E --> F[Validate Dependencies]
+    A[🔍 Audit Current Dependencies<br/>📋 Inventory existing packages<br/>🔢 Document versions] --> B[📝 Create requirements.txt<br/>📄 List all dependencies<br/>🔒 Pin specific versions]
+    B --> C[🧪 Test with aws-mwaa-local-runner<br/>🐳 Docker environment<br/>✅ Validate compatibility]
+    C --> D[📤 Upload to S3<br/>☁️ S3 bucket deployment<br/>🔐 Secure storage]
+    D --> E[🚀 Deploy MWAA Environment<br/>⚙️ Infrastructure setup<br/>🌐 Private web server]
+    E --> F[🔬 Validate Dependencies<br/>🧪 Test package imports<br/>📊 Monitor logs]
     
-    F --> G{All Dependencies Work?}
-    G -->|Yes| H[Production Deployment]
-    G -->|No| I[Create plugins.zip for Custom Packages]
+    F --> G{🤔 All Dependencies Work?<br/>✨ No import errors<br/>🎯 Full functionality}
+    G -->|✅ Yes| H[🎉 Production Deployment<br/>🚀 Go live<br/>📈 Monitor performance]
+    G -->|❌ No| I[🛠️ Create plugins.zip<br/>📦 Custom packages<br/>🔧 Build wheels]
     I --> C
+    
+    %% Vibrant color styling
+    style A fill:#ff6b6b,stroke:#ff4757,stroke-width:4px,color:#fff
+    style B fill:#4ecdc4,stroke:#26d0ce,stroke-width:3px,color:#fff
+    style C fill:#45b7d1,stroke:#3742fa,stroke-width:3px,color:#fff
+    style D fill:#96ceb4,stroke:#6c5ce7,stroke-width:3px,color:#fff
+    style E fill:#feca57,stroke:#ff9f43,stroke-width:3px,color:#fff
+    style F fill:#ff9ff3,stroke:#f368e0,stroke-width:3px,color:#fff
+    style G fill:#fd79a8,stroke:#e84393,stroke-width:4px,color:#fff
+    style H fill:#2ed573,stroke:#20bf6b,stroke-width:4px,color:#fff
+    style I fill:#70a1ff,stroke:#5352ed,stroke-width:3px,color:#fff
 ```
 
 ### Phase 2: VPC Endpoint Service (Long-term)
@@ -562,13 +573,22 @@ docker exec -it mwaa_local_scheduler pip list
 
 ```mermaid
 flowchart TD
-    A[Identify Conflict] --> B[Check MWAA Default Versions]
-    B --> C[Pin Specific Versions in requirements.txt]
-    C --> D[Test with Local Runner]
-    D --> E{Conflicts Resolved?}
-    E -->|No| F[Create Custom Wheel in plugins.zip]
-    E -->|Yes| G[Deploy to MWAA]
+    A[🚨 Identify Conflict<br/>📋 Package version mismatch<br/>⚠️ Import errors detected] --> B[🔍 Check MWAA Default Versions<br/>📊 Review pre-installed packages<br/>🐍 Python 3.11 compatibility]
+    B --> C[📌 Pin Specific Versions<br/>📄 Update requirements.txt<br/>🔒 Lock dependency versions]
+    C --> D[🧪 Test with Local Runner<br/>🐳 Docker environment<br/>✅ Validate functionality]
+    D --> E{🤔 Conflicts Resolved?<br/>✨ All packages working<br/>🎯 No import errors}
+    E -->|❌ No| F[🛠️ Create Custom Wheel<br/>📦 Build plugins.zip<br/>🔧 Package isolation]
+    E -->|✅ Yes| G[🚀 Deploy to MWAA<br/>☁️ Production environment<br/>🎉 Success!]
     F --> D
+    
+    %% Colorful styling for visual appeal
+    style A fill:#ff6b6b,stroke:#ff4757,stroke-width:4px,color:#fff
+    style B fill:#4ecdc4,stroke:#26d0ce,stroke-width:3px,color:#fff
+    style C fill:#45b7d1,stroke:#3742fa,stroke-width:3px,color:#fff
+    style D fill:#96ceb4,stroke:#6c5ce7,stroke-width:3px,color:#fff
+    style E fill:#feca57,stroke:#ff9f43,stroke-width:4px,color:#fff
+    style F fill:#ff9ff3,stroke:#f368e0,stroke-width:3px,color:#fff
+    style G fill:#2ed573,stroke:#20bf6b,stroke-width:4px,color:#fff
 ```
 
 ## Security Considerations
