@@ -742,29 +742,29 @@ graph TB
         CLI[⌨️ AWS CLI<br/>• DAG deployment<br/>• Log retrieval]:::access
     end
     
-    DEV --> IDE
-    IDE --> GIT
-    GIT --> S3BUCKET
-    S3BUCKET --> DAGFILE
-    S3BUCKET --> PLUGINS
-    S3BUCKET --> REQS
+    DEV -->|📝 Code Development| IDE
+    IDE -->|📤 Version Control| GIT
+    GIT -->|🚀 Deploy DAGs| S3BUCKET
+    S3BUCKET -->|📄 DAG Files| DAGFILE
+    S3BUCKET -->|🔌 Plugin Files| PLUGINS
+    S3BUCKET -->|📋 Dependencies| REQS
     
-    DAGFILE --> SCHEDULER
-    SCHEDULER --> WEBSERVER
-    SCHEDULER --> WORKER
+    DAGFILE -->|📅 Schedule Tasks| SCHEDULER
+    SCHEDULER -->|🌐 Web Interface| WEBSERVER
+    SCHEDULER -->|🔧 Execute Tasks| WORKER
     
-    WORKER --> PYTHON
-    PYTHON --> PACKAGES
-    PYTHON --> VENV
+    WORKER -->|🐍 Runtime Environment| PYTHON
+    PYTHON -->|📦 Package Access| PACKAGES
+    PYTHON -->|🏠 Isolated Environment| VENV
     
-    WORKER --> LOGGROUP
-    LOGGROUP --> LOGSTREAM
-    LOGGROUP --> METRICS
+    WORKER -->|📝 Task Logs| LOGGROUP
+    LOGGROUP -->|📊 Structured Logs| LOGSTREAM
+    LOGGROUP -->|📈 Performance Data| METRICS
     
-    WEBSERVER --> CONSOLE
-    LOGGROUP --> CONSOLE
-    CLI --> S3BUCKET
-    CLI --> LOGGROUP
+    WEBSERVER -->|🖥️ Management UI| CONSOLE
+    LOGGROUP -->|📊 Monitoring| CONSOLE
+    CLI -->|🚀 Automated Deploy| S3BUCKET
+    CLI -->|📝 Log Access| LOGGROUP
     
     classDef dev fill:#FF6B6B,stroke:#FF4757,stroke-width:3px,color:#fff
     classDef s3 fill:#4ECDC4,stroke:#26D0CE,stroke-width:3px,color:#fff
