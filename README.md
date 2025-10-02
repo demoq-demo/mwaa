@@ -741,20 +741,18 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "Development Environment"
+    %% Development Environment
         DEV[👨‍💻 Developer Workstation]:::dev
         IDE[💻 VS Code / PyCharm]:::dev
         GIT[📚 Git Repository]:::dev
-    end
     
-    subgraph "AWS S3 Storage"
+    %% AWS S3 Storage
         S3BUCKET[📦 S3 DAG Bucket<br/>mwaa-dags-customer-prod]:::s3
         DAGFILE[📄 discover_packages.py]:::s3
         PLUGINS[🔌 plugins.zip]:::s3
         REQS[📋 requirements.txt]:::s3
-    end
     
-    subgraph "MWAA Environment - Private Subnets"
+    %% MWAA Environment - Private Subnets
         SCHEDULER[⏰ Airflow Scheduler<br/>• DAG parsing<br/>• Task scheduling<br/>• Dependency resolution]:::scheduler
         WEBSERVER[🌐 Airflow Web Server<br/>• PRIVATE_ONLY access<br/>• DAG management UI<br/>• Log viewing]:::webserver
         WORKER[🔧 Airflow Worker<br/>• Task execution<br/>• Package discovery<br/>• pip list command]:::worker
@@ -762,18 +760,15 @@ graph TB
         PYTHON[🐍 Python 3.11 Runtime]:::runtime
         PACKAGES[📦 Pre-installed Packages<br/>• Apache Airflow 2.8.1<br/>• boto3, pandas, numpy<br/>• 200+ libraries]:::runtime
         VENV[🏠 Virtual Environment<br/>/usr/local/airflow]:::runtime
-    end
     
-    subgraph "AWS CloudWatch"
+    %% AWS CloudWatch
         LOGGROUP[📊 Log Group<br/>/aws/amazonmwaa/customer-mwaa-prod]:::logs
         LOGSTREAM[📝 Log Stream<br/>dag_id=discover_packages]:::logs
         METRICS[📈 CloudWatch Metrics<br/>• DAG success rate<br/>• Task duration<br/>• Error counts]:::logs
-    end
     
-    subgraph "Access & Monitoring"
+    %% Access & Monitoring
         CONSOLE[🖥️ AWS Console<br/>• MWAA management<br/>• CloudWatch access]:::access
         CLI[⌨️ AWS CLI<br/>• DAG deployment<br/>• Log retrieval]:::access
-    end
     
     DEV -->|📝 Code Development| IDE
     IDE -->|📤 Version Control| GIT
@@ -808,6 +803,7 @@ graph TB
     classDef logs fill:#54A0FF,stroke:#2F3542,stroke-width:4px,color:#fff
     classDef access fill:#5F27CD,stroke:#341F97,stroke-width:4px,color:#fff
 ```
+
 ### 🔍 **Key Benefits Highlighted in Architecture:**
 
 **🎯 Real Environment Execution:**
