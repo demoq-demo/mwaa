@@ -729,17 +729,13 @@ graph TB
     end
     
     subgraph "MWAA Environment - Private Subnets"
-        subgraph "Airflow Components"
-            SCHEDULER[⏰ Airflow Scheduler<br/>• DAG parsing<br/>• Task scheduling<br/>• Dependency resolution]:::scheduler
-            WEBSERVER[🌐 Airflow Web Server<br/>• PRIVATE_ONLY access<br/>• DAG management UI<br/>• Log viewing]:::webserver
-            WORKER[🔧 Airflow Worker<br/>• Task execution<br/>• Package discovery<br/>• pip list command]:::worker
-        end
+        SCHEDULER[⏰ Airflow Scheduler<br/>• DAG parsing<br/>• Task scheduling<br/>• Dependency resolution]:::scheduler
+        WEBSERVER[🌐 Airflow Web Server<br/>• PRIVATE_ONLY access<br/>• DAG management UI<br/>• Log viewing]:::webserver
+        WORKER[🔧 Airflow Worker<br/>• Task execution<br/>• Package discovery<br/>• pip list command]:::worker
         
-        subgraph "Execution Environment"
-            PYTHON[🐍 Python 3.11 Runtime]:::runtime
-            PACKAGES[📦 Pre-installed Packages<br/>• Apache Airflow 2.8.1<br/>• boto3, pandas, numpy<br/>• 200+ libraries]:::runtime
-            VENV[🏠 Virtual Environment<br/>/usr/local/airflow]:::runtime
-        end
+        PYTHON[🐍 Python 3.11 Runtime]:::runtime
+        PACKAGES[📦 Pre-installed Packages<br/>• Apache Airflow 2.8.1<br/>• boto3, pandas, numpy<br/>• 200+ libraries]:::runtime
+        VENV[🏠 Virtual Environment<br/>/usr/local/airflow]:::runtime
     end
     
     subgraph "AWS CloudWatch"
