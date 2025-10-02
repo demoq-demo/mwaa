@@ -8,21 +8,37 @@ For MWAA environments with `PRIVATE_ONLY` web server access, Python dependency m
 
 ```mermaid
 graph TB
-    subgraph "On-Premises Current State"
-        A[Airflow Workers] --> N[Nexus Repository]
-        B[Airflow Schedulers] --> N
-        C[Airflow Webserver] --> N
-        N --> P[Python Packages]
+    subgraph "🏢 On-Premises Current State"
+        A[🔧 Airflow Workers] --> N[📦 Nexus Repository]
+        B[⏰ Airflow Schedulers] --> N
+        C[🌐 Airflow Webserver] --> N
+        N --> P[🐍 Python Packages]
     end
     
-    subgraph "MWAA Target State"
-        MW[MWAA Workers] --> S3[S3 Bucket]
-        MS[MWAA Schedulers] --> S3
-        MWS[MWAA Webserver<br/>PRIVATE_ONLY] -.-> VE[VPC Endpoints]
-        VE -.-> NR[Nexus Repository<br/>On-Premises]
-        S3 --> PP[Python Packages<br/>requirements.txt]
-        S3 --> PZ[plugins.zip]
+    subgraph "☁️ MWAA Target State"
+        MW[🔧 MWAA Workers] --> S3[📦 S3 Bucket]
+        MS[⏰ MWAA Schedulers] --> S3
+        MWS[🌐 MWAA Webserver<br/>🔒 PRIVATE_ONLY] -.-> VE[🔗 VPC Endpoints]
+        VE -.-> NR[📦 Nexus Repository<br/>🏢 On-Premises]
+        S3 --> PP[🐍 Python Packages<br/>📄 requirements.txt]
+        S3 --> PZ[🔌 plugins.zip]
     end
+    
+    %% Styling for colorful appearance
+    style A fill:#ff6b6b,stroke:#ff4757,stroke-width:3px,color:#fff
+    style B fill:#ffa502,stroke:#ff6348,stroke-width:3px,color:#fff
+    style C fill:#3742fa,stroke:#2f3542,stroke-width:3px,color:#fff
+    style N fill:#2ed573,stroke:#20bf6b,stroke-width:4px,color:#fff
+    style P fill:#a4b0be,stroke:#747d8c,stroke-width:2px,color:#fff
+    
+    style MW fill:#ff6b6b,stroke:#ff4757,stroke-width:3px,color:#fff
+    style MS fill:#ffa502,stroke:#ff6348,stroke-width:3px,color:#fff
+    style MWS fill:#3742fa,stroke:#2f3542,stroke-width:3px,color:#fff
+    style S3 fill:#00d2d3,stroke:#01a3a4,stroke-width:4px,color:#fff
+    style VE fill:#5f27cd,stroke:#341f97,stroke-width:3px,color:#fff
+    style NR fill:#2ed573,stroke:#20bf6b,stroke-width:3px,color:#fff
+    style PP fill:#a4b0be,stroke:#747d8c,stroke-width:2px,color:#fff
+    style PZ fill:#fd79a8,stroke:#e84393,stroke-width:2px,color:#fff
 ```
 
 ## Python Dependency Installation Options for Private Web Server Access
@@ -38,45 +54,49 @@ graph TB
 **Complete Architecture Flow:**
 ```mermaid
 graph TB
-    subgraph "Developer Environment"
-        DEV[Developer Laptop/EC2]
-        CICD[CI/CD Pipeline<br/>CodeBuild/Jenkins]
-    end
+    DEV[👨💻 Developer Laptop/EC2]
+    CICD[🚀 CI/CD Pipeline<br/>🔧 CodeBuild/Jenkins]
     
-    subgraph "AWS Account - Same as MWAA"
-        subgraph "MWAA VPC"
-            MW[MWAA Workers]
-            MS[MWAA Schedulers]
-            MWS[MWAA Web Server<br/>PRIVATE_ONLY]
-            S3VPE[S3 VPC Endpoint<br/>com.amazonaws.s3]
-        end
-        
-        subgraph "S3 Service"
-            S3[S3 Bucket<br/>mwaa-dependencies-<company>]
-            REQ[requirements.txt]
-            PLUG[plugins.zip]
-            CONST[constraints.txt]
-        end
-        
-        IAM[MWAA Execution Role<br/>AmazonMWAAServiceRolePolicy]
-    end
+    MW[👷 MWAA Workers]
+    MS[⏰ MWAA Schedulers]
+    MWS[🌐 MWAA Web Server<br/>🔒 PRIVATE_ONLY]
+    S3VPE[🔗 S3 VPC Endpoint<br/>🌐 com.amazonaws.s3]
     
-    DEV -->|1. Upload via AWS CLI/SDK| S3
-    CICD -->|2. Automated deployment| S3
+    S3[📦 S3 Bucket<br/>mwaa-dependencies-company]
+    REQ[📄 requirements.txt]
+    PLUG[🔌 plugins.zip]
+    CONST[📝 constraints.txt]
+    
+    IAM[🔑 MWAA Execution Role<br/>🛡️ AmazonMWAAServiceRolePolicy]
+    
+    DEV -->|📤 1. Upload via AWS CLI/SDK| S3
+    CICD -->|🤖 2. Automated deployment| S3
     S3 --> REQ
     S3 --> PLUG
     S3 --> CONST
     
-    MW -->|3. Read via VPC Endpoint| S3VPE
-    MS -->|4. Read via VPC Endpoint| S3VPE
-    MWS -->|5. Read via VPC Endpoint| S3VPE
-    S3VPE -->|6. Secure access| S3
+    MW -->|🔍 3. Read via VPC Endpoint| S3VPE
+    MS -->|🔍 4. Read via VPC Endpoint| S3VPE
+    MWS -->|🔍 5. Read via VPC Endpoint| S3VPE
+    S3VPE -->|🔒 6. Secure access| S3
     
-    IAM -.->|7. Permissions| S3
+    IAM -.->|🔑 7. Permissions| S3
     
-    style S3 fill:#f96,stroke:#333,stroke-width:4px
-    style S3VPE fill:#bbf,stroke:#333,stroke-width:2px
-    style MWS fill:#fbb,stroke:#333,stroke-width:2px
+    %% Colorful styling
+    style DEV fill:#ff6b6b,stroke:#ff4757,stroke-width:3px,color:#fff
+    style CICD fill:#ffa502,stroke:#ff6348,stroke-width:3px,color:#fff
+    
+    style MW fill:#3742fa,stroke:#2f3542,stroke-width:3px,color:#fff
+    style MS fill:#5f27cd,stroke:#341f97,stroke-width:3px,color:#fff
+    style MWS fill:#00d2d3,stroke:#01a3a4,stroke-width:3px,color:#fff
+    style S3VPE fill:#2ed573,stroke:#20bf6b,stroke-width:3px,color:#fff
+    
+    style S3 fill:#fd79a8,stroke:#e84393,stroke-width:4px,color:#fff
+    style REQ fill:#a4b0be,stroke:#747d8c,stroke-width:2px,color:#fff
+    style PLUG fill:#ff9ff3,stroke:#f368e0,stroke-width:2px,color:#fff
+    style CONST fill:#70a1ff,stroke:#5352ed,stroke-width:2px,color:#fff
+    
+    style IAM fill:#ff7675,stroke:#d63031,stroke-width:3px,color:#fff
 ```
 
 **Detailed Sequence Flow:**
@@ -257,38 +277,42 @@ def lambda_handler(event, context):
 **Detailed Architecture Flow:**
 ```mermaid
 graph TB
-    subgraph "AWS - MWAA VPC (<company> Account)"
-        MW[MWAA Workers]
-        MS[MWAA Schedulers] 
-        MWS[MWAA Web Server<br/>PRIVATE_ONLY]
-        VPE[VPC Endpoint<br/>nexus.<company>.com]
-    end
+    MW[🔧 MWAA Workers]
+    MS[⏰ MWAA Schedulers] 
+    MWS[🌐 MWAA Web Server<br/>🔒 PRIVATE_ONLY]
+    VPE[🔗 VPC Endpoint<br/>🌐 nexus.company.com]
     
-    subgraph "AWS - Service Account (<company>)"ount (customer)"
-        VPES[VPC Endpoint Service]
-        NLB[Network Load Balancer<br/>Target: On-premises Nexus]
-        DX[Direct Connect Gateway<br/>or VPN Connection]
-    end
+    VPES[🔌 VPC Endpoint Service]
+    NLB[⚖️ Network Load Balancer<br/>🎯 Target: On-premises Nexus]
+    DX[🌉 Direct Connect Gateway<br/>🔒 or VPN Connection]
     
-    subgraph "On-Premises - <company> Data Center"
-        FW[Corporate Firewall]
-        NR[Nexus Repository<br/>nexus.<company>.local:8081]
-        DNS[Internal DNS<br/>nexus.<company>.com]
-    end
+    FW[🔥 Corporate Firewall]
+    NR[📦 Nexus Repository<br/>🌐 nexus.company.local:8081]
+    DNS[🌐 Internal DNS<br/>📋 nexus.company.com]
     
-    MW --> VPE
-    MS --> VPE
-    MWS --> VPE
-    VPE -.->|AWS PrivateLink| VPES
-    VPES --> NLB
-    NLB -.->|Direct Connect/VPN| DX
-    DX --> FW
-    FW --> NR
-    DNS -.-> NR
+    MW -->|🔍 Package Request| VPE
+    MS -->|🔍 Package Request| VPE
+    MWS -->|🔍 Package Request| VPE
+    VPE -.->|🔗 AWS PrivateLink| VPES
+    VPES -->|⚖️ Load Balance| NLB
+    NLB -.->|🌉 Direct Connect/VPN| DX
+    DX -->|🔥 Firewall Rules| FW
+    FW -->|📦 Repository Access| NR
+    DNS -.->|🌐 DNS Resolution| NR
     
-    style NR fill:#f9f,stroke:#333,stroke-width:4px
-    style VPE fill:#bbf,stroke:#333,stroke-width:2px
-    style VPES fill:#bbf,stroke:#333,stroke-width:2px
+    %% Colorful styling
+    style MW fill:#ff6b6b,stroke:#ff4757,stroke-width:3px,color:#fff
+    style MS fill:#ffa502,stroke:#ff6348,stroke-width:3px,color:#fff
+    style MWS fill:#3742fa,stroke:#2f3542,stroke-width:3px,color:#fff
+    style VPE fill:#5f27cd,stroke:#341f97,stroke-width:3px,color:#fff
+    
+    style VPES fill:#00d2d3,stroke:#01a3a4,stroke-width:3px,color:#fff
+    style NLB fill:#2ed573,stroke:#20bf6b,stroke-width:3px,color:#fff
+    style DX fill:#fd79a8,stroke:#e84393,stroke-width:3px,color:#fff
+    
+    style FW fill:#ff7675,stroke:#d63031,stroke-width:3px,color:#fff
+    style NR fill:#a4b0be,stroke:#747d8c,stroke-width:4px,color:#fff
+    style DNS fill:#70a1ff,stroke:#5352ed,stroke-width:2px,color:#fff
 ```
 
 **Requirements:**
