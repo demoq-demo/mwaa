@@ -81,7 +81,7 @@ graph TB
 
 **Detailed Sequence Flow:**
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': { 'primaryColor': '#ff6b6b', 'primaryTextColor': '#fff', 'primaryBorderColor': '#ff4757', 'lineColor': '#5f27cd', 'secondaryColor': '#00d2d3', 'tertiaryColor': '#fff', 'background': '#f8f9fa', 'mainBkg': '#ffffff', 'secondBkg': '#e3f2fd', 'tertiaryBkg': '#fff3e0'}}}%%
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor': '#ff6b6b', 'primaryTextColor': '#000000', 'actorTextColor': '#000000', 'labelTextColor': '#000000', 'loopTextColor': '#000000', 'noteTextColor': '#000000', 'activationTextColor': '#000000', 'primaryBorderColor': '#ff4757', 'lineColor': '#5f27cd', 'secondaryColor': '#00d2d3', 'tertiaryColor': '#fff', 'background': '#f8f9fa', 'mainBkg': '#ffffff', 'secondBkg': '#e3f2fd', 'tertiaryBkg': '#fff3e0', 'actorTextColor': '#000000', 'labelTextColor': '#000000'}}}%%
 sequenceDiagram
     participant DEV as 👨‍💻 Developer<br/>(Laptop/EC2)
     participant CICD as 🚀 CI/CD Pipeline
@@ -601,26 +601,6 @@ gantt
     Nexus Integration         :nexus, 2024-04-01, 2024-04-30
 ```
 
-## Recommendations
-
-### Immediate Actions (Phase 1)
-1. **Audit Dependencies**: Catalog all Python packages used in on-premises Airflow
-2. **Create requirements.txt**: Pin all versions to avoid conflicts
-3. **Test Locally**: Use aws-mwaa-local-runner for validation
-4. **Build plugins.zip**: Package custom/internal libraries
-
-### Long-term Strategy (Phase 2)
-1. **VPC Endpoint Service**: Design secure connection to Nexus
-2. **Network Load Balancer**: Deploy in front of Nexus for PrivateLink
-3. **Monitoring**: Implement comprehensive dependency monitoring
-4. **Automation**: Create CI/CD pipeline for dependency management
-
-### Best Practices
-- **Version Pinning**: Always pin dependency versions
-- **Testing**: Test all changes with local runner first
-- **Security**: Regular vulnerability scanning of packages
-- **Documentation**: Maintain dependency documentation
-- **Rollback Plan**: Always have rollback procedures ready
 
 
 ### 🔍 How to Discover Pre-installed Packages
@@ -972,7 +952,7 @@ sequenceDiagram
     Note right of OnPrem: Response Received:<br/>• DAG triggered successfully<br/>• Run ID for tracking<br/>• Execution timestamp<br/>• Status monitoring URL
 ```
 
-## 🛠️ **Implementation Requirements**
+## 🛠️ **Sample Implementation Requirements**
 
 ### **1. Service VPC Account Setup**
 
