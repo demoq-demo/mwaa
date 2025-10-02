@@ -862,61 +862,44 @@ The key to success is thorough testing with aws-mwaa-local-runner and careful de
 
 ### Web Server API Access from On-Premises
 
-## ** How can on-premises applications trigger REST API on the MWAA web server when workers are in private VPC with Transit Gateway connectivity?
+## **How can on-premises applications trigger REST API on the MWAA web server when workers are in private VPC with Transit Gateway connectivity?**
 
-## 🏗️ **Network Architecture Overview**
+## 🏗️ **Network Architecture Overview - Transit Gateway Solution**
 
 ```mermaid
 graph TB
-    subgraph "On-Premises Data Center"
-        ONPREM[🏢 On-Premises Applications<br/>• REST API clients<br/>• Workflow triggers<br/>• Monitoring systems]:::onprem
-        FIREWALL[🔥 Corporate Firewall<br/>• Outbound HTTPS allowed<br/>• VPN/DX routing]:::onprem
-    end
+    ONPREM[🏢 On-Premises Applications<br/>• REST API clients<br/>• Workflow triggers<br/>• Monitoring systems]:::onprem
+    FIREWALL[🔥 Corporate Firewall<br/>• Outbound HTTPS allowed<br/>• VPN/DX routing]:::onprem
     
-    subgraph "AWS Transit Gateway"
-        TGW[🌐 Transit Gateway<br/>• Cross-VPC routing<br/>• On-premises connectivity<br/>• Route table management]:::tgw
-    end
+    VPN[🔗 VPN/Direct Connect<br/>• Secure connection<br/>• BGP routing<br/>• High availability]:::vpn
     
-    subgraph "Customer VPC Account"
-        subgraph "Private Subnets"
-            WORKERS[🔧 MWAA Workers<br/>• Task execution<br/>• Private subnet only<br/>• No internet access]:::workers
-        end
-        
-        subgraph "VPC Endpoints"
-            VPCE[🔗 VPC Endpoint<br/>• Service VPC connection<br/>• Private connectivity<br/>• DNS resolution]:::vpce
-        end
-    end
+    TGW[🌐 Transit Gateway<br/>• Cross-VPC routing<br/>• On-premises connectivity<br/>• Route table management]:::tgw
     
-    subgraph "Service VPC Account"
-        subgraph "Private Subnets"
-            WEBSERVER[🌐 MWAA Web Server<br/>• Airflow REST API<br/>• PRIVATE_ONLY mode<br/>• IAM authentication]:::webserver
-            ALB[⚖️ Application Load Balancer<br/>• HTTPS termination<br/>• Health checks<br/>• Target: Web Server]:::alb
-        end
-        
-        subgraph "VPC Endpoint Service"
-            VPCES[🔌 VPC Endpoint Service<br/>• Cross-account access<br/>• Network Load Balancer<br/>• Private connectivity]:::vpces
-            NLB[🔄 Network Load Balancer<br/>• Layer 4 load balancing<br/>• Target: ALB<br/>• High availability]:::nlb
-        end
-    end
+    MWAAVPC[🏠 MWAA VPC<br/>• Private subnets<br/>• Same account<br/>• Connected to TGW]:::vpc
+    
+    WORKERS[🔧 MWAA Workers<br/>• Task execution<br/>• Private subnet only<br/>• No internet access]:::workers
+    
+    WEBSERVER[🌐 MWAA Web Server<br/>• Airflow REST API<br/>• PRIVATE_ONLY mode<br/>• IAM authentication]:::webserver
+    
+    DNS[🌐 Route 53 Private Zone<br/>• Internal DNS resolution<br/>• mwaa.company.internal<br/>• Cross-VPC association]:::dns
     
     ONPREM --> FIREWALL
-    FIREWALL -.->|VPN/Direct Connect| TGW
-    TGW --> VPCE
-    VPCE -.->|AWS PrivateLink| VPCES
-    VPCES --> NLB
-    NLB --> ALB
-    ALB --> WEBSERVER
+    FIREWALL --> VPN
+    VPN --> TGW
+    TGW --> MWAAVPC
+    MWAAVPC --> WORKERS
+    MWAAVPC --> WEBSERVER
     
-    WORKERS --> VPCE
+    DNS -.->|DNS Resolution| WEBSERVER
+    ONPREM -.->|DNS Query| DNS
     
-    classDef onprem fill:#FF6B6B,stroke:#FF4757,stroke-width:3px,color:#fff
-    classDef tgw fill:#4ECDC4,stroke:#26D0CE,stroke-width:3px,color:#fff
-    classDef workers fill:#45B7D1,stroke:#3742FA,stroke-width:3px,color:#fff
-    classDef vpce fill:#96CEB4,stroke:#6C5CE7,stroke-width:3px,color:#fff
-    classDef webserver fill:#FECA57,stroke:#FF9F43,stroke-width:3px,color:#fff
-    classDef alb fill:#FF9FF3,stroke:#F368E0,stroke-width:3px,color:#fff
-    classDef vpces fill:#54A0FF,stroke:#2F3542,stroke-width:3px,color:#fff
-    classDef nlb fill:#5F27CD,stroke:#341F97,stroke-width:3px,color:#fff
+    classDef onprem fill:#FF6B6B,stroke:#FF4757,stroke-width:4px,color:#fff
+    classDef vpn fill:#4ECDC4,stroke:#26D0CE,stroke-width:4px,color:#fff
+    classDef tgw fill:#45B7D1,stroke:#3742FA,stroke-width:4px,color:#fff
+    classDef vpc fill:#96CEB4,stroke:#6C5CE7,stroke-width:4px,color:#fff
+    classDef workers fill:#FECA57,stroke:#FF9F43,stroke-width:4px,color:#fff
+    classDef webserver fill:#FF9FF3,stroke:#F368E0,stroke-width:4px,color:#fff
+    classDef dns fill:#54A0FF,stroke:#2F3542,stroke-width:4px,color:#fff
 ```
 
 ## 🔄 **Detailed Connection Sequence**
@@ -925,48 +908,45 @@ graph TB
 sequenceDiagram
     participant OnPrem as 🏢 On-Premises App
     participant Firewall as 🔥 Corporate Firewall
+    participant VPN as 🔗 VPN/Direct Connect
     participant TGW as 🌐 Transit Gateway
-    participant VPCEndpoint as 🔗 VPC Endpoint
-    participant VPCEndpointSvc as 🔌 VPC Endpoint Service
-    participant NLB as 🔄 Network Load Balancer
-    participant ALB as ⚖️ Application Load Balancer
+    participant MWAAVPC as 🏠 MWAA VPC
+    participant DNS as 🌐 Route 53 DNS
     participant WebServer as 🌐 MWAA Web Server
     participant IAM as 👤 AWS IAM
     
-    Note over OnPrem,IAM: 🔐 Phase 1: Authentication & Authorization
+    Note over OnPrem,IAM: 🔐 Phase 1: Authentication & DNS Resolution
     
     OnPrem->>IAM: 1. Assume IAM Role for API Access
-    Note right of OnPrem: Authentication Method:<br/>• IAM User with API keys<br/>• IAM Role with STS assume<br/>• Service account credentials<br/>• Cross-account role assumption
+    Note right of OnPrem: Authentication Method:<br/>• IAM User with API keys<br/>• IAM Role with STS assume<br/>• Service account credentials
     
     IAM-->>OnPrem: 2. Return Temporary Credentials
     Note right of IAM: STS Response:<br/>• AccessKeyId: ASIA...<br/>• SecretAccessKey: temp-secret<br/>• SessionToken: session-token<br/>• Expiration: 1 hour
     
+    OnPrem->>DNS: 3. DNS Query for MWAA Web Server
+    Note right of OnPrem: DNS Query:<br/>• Hostname: mwaa.company.internal<br/>• Query Type: A record<br/>• Resolver: Corporate DNS
+    
+    DNS-->>OnPrem: 4. Return MWAA Web Server IP
+    Note right of DNS: DNS Response:<br/>• IP: 10.1.10.100 (MWAA VPC)<br/>• TTL: 300 seconds<br/>• Private IP address
+    
     Note over OnPrem,IAM: 🌐 Phase 2: Network Routing & Connection
     
-    OnPrem->>Firewall: 3. HTTPS Request to MWAA API
-    Note right of OnPrem: API Request:<br/>• URL: https://mwaa-api.service.internal<br/>• Method: POST /dags/my_dag/dagRuns<br/>• Headers: Authorization, Content-Type<br/>• Body: DAG run configuration
+    OnPrem->>Firewall: 5. HTTPS Request to MWAA API
+    Note right of OnPrem: API Request:<br/>• URL: https://mwaa.company.internal<br/>• Method: POST /dags/my_dag/dagRuns<br/>• Headers: Authorization, Content-Type<br/>• Body: DAG run configuration
     
-    Firewall->>TGW: 4. Route via VPN/Direct Connect
-    Note right of Firewall: Routing Rules:<br/>• Destination: 10.1.0.0/16 (Service VPC)<br/>• Next hop: Transit Gateway<br/>• Protocol: HTTPS (443)<br/>• Source: On-premises subnet
+    Firewall->>VPN: 6. Route via VPN/Direct Connect
+    Note right of Firewall: Routing Rules:<br/>• Destination: 10.1.0.0/16 (MWAA VPC)<br/>• Next hop: VPN Gateway<br/>• Protocol: HTTPS (443)<br/>• Source: On-premises subnet
     
-    TGW->>VPCEndpoint: 5. Forward to Customer VPC
-    Note right of TGW: TGW Route Table:<br/>• Route: 10.1.0.0/16 → Customer VPC<br/>• Propagation: Enabled<br/>• Association: Customer VPC attachment<br/>• Status: Active
+    VPN->>TGW: 7. Forward to Transit Gateway
+    Note right of VPN: VPN Connection:<br/>• BGP routing enabled<br/>• Advertised routes: 10.1.0.0/16<br/>• Connection status: UP<br/>• Tunnel redundancy: Active
     
-    VPCEndpoint->>VPCEndpointSvc: 6. PrivateLink Connection
-    Note right of VPCEndpoint: VPC Endpoint:<br/>• Type: Interface endpoint<br/>• Service: com.amazonaws.vpce.region.vpce-svc-xxx<br/>• DNS: mwaa-api.service.internal<br/>• Security Group: Allow 443 inbound
+    TGW->>MWAAVPC: 8. Route to MWAA VPC
+    Note right of TGW: TGW Route Table:<br/>• Route: 10.1.0.0/16 → MWAA VPC<br/>• Propagation: Enabled<br/>• Association: MWAA VPC attachment<br/>• Status: Active
     
-    Note over OnPrem,IAM: ⚖️ Phase 3: Load Balancing & Routing
+    MWAAVPC->>WebServer: 9. Direct connection to MWAA Web Server
+    Note right of MWAAVPC: VPC Routing:<br/>• Security Group: Allow 443 from on-premises<br/>• NACL: Allow HTTPS traffic<br/>• Private subnet routing<br/>• No NAT Gateway required
     
-    VPCEndpointSvc->>NLB: 7. Forward to Network Load Balancer
-    Note right of VPCEndpointSvc: VPC Endpoint Service:<br/>• Acceptance: Auto-accept<br/>• Principal: Customer account ARN<br/>• Target: Network Load Balancer<br/>• Health check: TCP 443
-    
-    NLB->>ALB: 8. Route to Application Load Balancer
-    Note right of NLB: NLB Configuration:<br/>• Scheme: Internal<br/>• Type: Network<br/>• Target: ALB (IP targets)<br/>• Health check: TCP 443
-    
-    ALB->>WebServer: 9. Forward to MWAA Web Server
-    Note right of ALB: ALB Configuration:<br/>• Scheme: Internal<br/>• Listener: HTTPS 443<br/>• Target Group: MWAA Web Server<br/>• Health check: /health
-    
-    Note over OnPrem,IAM: 🔍 Phase 4: API Processing & Response
+    Note over OnPrem,IAM: 🔍 Phase 3: API Processing & Response
     
     WebServer->>IAM: 10. Validate API Request
     Note right of WebServer: API Validation:<br/>• AWS Signature V4 verification<br/>• IAM policy evaluation<br/>• Resource-based permissions<br/>• Rate limiting check
@@ -977,359 +957,14 @@ sequenceDiagram
     WebServer->>WebServer: 12. Process DAG Trigger Request
     Note right of WebServer: DAG Processing:<br/>• Validate DAG exists<br/>• Check DAG is not paused<br/>• Create DAG run instance<br/>• Queue tasks for execution
     
-    WebServer-->>ALB: 13. Return API Response
+    WebServer-->>MWAAVPC: 13. Return API Response
     Note right of WebServer: API Response:<br/>• Status: 200 OK<br/>• Body: DAG run details<br/>• Headers: Content-Type, CORS<br/>• Run ID: manual__2024-01-15T10:30:00
     
-    ALB-->>NLB: 14. Forward Response
-    NLB-->>VPCEndpointSvc: 15. Return via PrivateLink
-    VPCEndpointSvc-->>VPCEndpoint: 16. Route back to Customer VPC
-    VPCEndpoint-->>TGW: 17. Return via Transit Gateway
-    TGW-->>Firewall: 18. Route back to On-premises
-    Firewall-->>OnPrem: 19. Deliver API Response
+    MWAAVPC-->>TGW: 14. Route response back
+    TGW-->>VPN: 15. Forward via Transit Gateway
+    VPN-->>Firewall: 16. Return via VPN/Direct Connect
+    Firewall-->>OnPrem: 17. Deliver API Response
     
-    Note right of OnPrem: Response Received:<br/>• DAG triggered successfully<br/>• Run ID for tracking<br/>• Execution timestamp<br/>• Status monitoring URL
+    Note right of OnPrem: Response Received:<br/>• DAG triggered successfully<br/>• Run ID for tracking<br/>• Execution timestamp<br/>• Direct MWAA access confirmed
 ```
 
-## 🛠️ **Sample Implementation Requirements**
-
-### **1. Service VPC Account Setup**
-
-```yaml
-# VPC Endpoint Service Configuration
-VPCEndpointService:
-  Type: AWS::EC2::VPCEndpointService
-  Properties:
-    NetworkLoadBalancerArns:
-      - !Ref NetworkLoadBalancer
-    AcceptanceRequired: false
-    AllowedPrincipals:
-      - !Sub 'arn:aws:iam::${CustomerAccountId}:root'
-    PolicyDocument:
-      Statement:
-        - Effect: Allow
-          Principal:
-            AWS: !Sub 'arn:aws:iam::${CustomerAccountId}:role/MWAAAPIRole'
-          Action: '*'
-          Resource: '*'
-
-# Network Load Balancer
-NetworkLoadBalancer:
-  Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-  Properties:
-    Type: network
-    Scheme: internal
-    Subnets:
-      - !Ref PrivateSubnet1
-      - !Ref PrivateSubnet2
-    Tags:
-      - Key: Name
-        Value: MWAA-API-NLB
-
-# Application Load Balancer (Target for NLB)
-ApplicationLoadBalancer:
-  Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-  Properties:
-    Type: application
-    Scheme: internal
-    SecurityGroups:
-      - !Ref MWAAWebServerSecurityGroup
-    Subnets:
-      - !Ref PrivateSubnet1
-      - !Ref PrivateSubnet2
-
-# Target Group for MWAA Web Server
-MWAATargetGroup:
-  Type: AWS::ElasticLoadBalancingV2::TargetGroup
-  Properties:
-    Port: 443
-    Protocol: HTTPS
-    VpcId: !Ref ServiceVPC
-    HealthCheckPath: /health
-    HealthCheckProtocol: HTTPS
-    Targets:
-      - Id: !GetAtt MWAAEnvironment.WebserverUrl
-        Port: 443
-```
-
-### **2. Customer VPC Account Setup**
-
-```yaml
-# VPC Endpoint for MWAA API Access
-MWAAVPCEndpoint:
-  Type: AWS::EC2::VPCEndpoint
-  Properties:
-    VpcId: !Ref CustomerVPC
-    ServiceName: !Sub 'com.amazonaws.vpce.${AWS::Region}.${VPCEndpointServiceId}'
-    VpcEndpointType: Interface
-    SubnetIds:
-      - !Ref PrivateSubnet1
-      - !Ref PrivateSubnet2
-    SecurityGroupIds:
-      - !Ref MWAAAPISecurityGroup
-    PrivateDnsEnabled: true
-    PolicyDocument:
-      Statement:
-        - Effect: Allow
-          Principal: '*'
-          Action:
-            - airflow:CreateDagRun
-            - airflow:GetDagRun
-            - airflow:GetDag
-          Resource: '*'
-
-# Security Group for VPC Endpoint
-MWAAAPISecurityGroup:
-  Type: AWS::EC2::SecurityGroup
-  Properties:
-    GroupDescription: Security group for MWAA API VPC Endpoint
-    VpcId: !Ref CustomerVPC
-    SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        CidrIp: 192.168.0.0/16  # On-premises CIDR
-        Description: HTTPS from on-premises
-    SecurityGroupEgress:
-      - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        CidrIp: 10.1.0.0/16  # Service VPC CIDR
-        Description: HTTPS to Service VPC
-```
-
-### **3. Transit Gateway Configuration**
-
-```yaml
-# Transit Gateway Route Table
-TGWRouteTable:
-  Type: AWS::EC2::TransitGatewayRouteTable
-  Properties:
-    TransitGatewayId: !Ref TransitGateway
-    Tags:
-      - Key: Name
-        Value: MWAA-API-Routes
-
-# Route to Service VPC
-ServiceVPCRoute:
-  Type: AWS::EC2::TransitGatewayRoute
-  Properties:
-    RouteTableId: !Ref TGWRouteTable
-    DestinationCidrBlock: 10.1.0.0/16  # Service VPC CIDR
-    TransitGatewayAttachmentId: !Ref ServiceVPCAttachment
-
-# Route to Customer VPC
-CustomerVPCRoute:
-  Type: AWS::EC2::TransitGatewayRoute
-  Properties:
-    RouteTableId: !Ref TGWRouteTable
-    DestinationCidrBlock: 10.0.0.0/16  # Customer VPC CIDR
-    TransitGatewayAttachmentId: !Ref CustomerVPCAttachment
-
-# Route to On-premises
-OnPremisesRoute:
-  Type: AWS::EC2::TransitGatewayRoute
-  Properties:
-    RouteTableId: !Ref TGWRouteTable
-    DestinationCidrBlock: 192.168.0.0/16  # On-premises CIDR
-    TransitGatewayAttachmentId: !Ref VPNAttachment
-```
-
-### **4. IAM Configuration**
-
-```yaml
-# Cross-account role for on-premises API access
-MWAAAPIRole:
-  Type: AWS::IAM::Role
-  Properties:
-    RoleName: OnPremises-MWAA-API-Role
-    AssumeRolePolicyDocument:
-      Version: '2012-10-17'
-      Statement:
-        - Effect: Allow
-          Principal:
-            AWS: !Sub 'arn:aws:iam::${OnPremisesAccountId}:user/mwaa-api-user'
-          Action: sts:AssumeRole
-          Condition:
-            StringEquals:
-              'sts:ExternalId': 'unique-external-id'
-    Policies:
-      - PolicyName: MWAAAPIAccess
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - airflow:CreateDagRun
-                - airflow:GetDagRun
-                - airflow:GetDag
-                - airflow:GetDags
-              Resource:
-                - !Sub 'arn:aws:airflow:${AWS::Region}:${AWS::AccountId}:environment/${MWAAEnvironmentName}'
-                - !Sub 'arn:aws:airflow:${AWS::Region}:${AWS::AccountId}:environment/${MWAAEnvironmentName}/*'
-```
-
-## 🔧 **On-Premises Implementation**
-
-### **Python API Client Example**
-
-```python
-import boto3
-import requests
-import json
-from datetime import datetime
-
-class MWAAAPIClient:
-    def __init__(self, role_arn, external_id, api_endpoint):
-        self.role_arn = role_arn
-        self.external_id = external_id
-        self.api_endpoint = api_endpoint
-        self.session = None
-        
-    def assume_role(self):
-        """Assume IAM role for API access"""
-        sts_client = boto3.client('sts')
-        
-        response = sts_client.assume_role(
-            RoleArn=self.role_arn,
-            RoleSessionName='onpremises-mwaa-api',
-            ExternalId=self.external_id,
-            DurationSeconds=3600
-        )
-        
-        credentials = response['Credentials']
-        self.session = boto3.Session(
-            aws_access_key_id=credentials['AccessKeyId'],
-            aws_secret_access_key=credentials['SecretAccessKey'],
-            aws_session_token=credentials['SessionToken']
-        )
-        
-    def trigger_dag(self, dag_id, conf=None):
-        """Trigger DAG via MWAA REST API"""
-        if not self.session:
-            self.assume_role()
-            
-        # Use AWS4Auth for request signing
-        from botocore.auth import SigV4Auth
-        from botocore.awsrequest import AWSRequest
-        
-        url = f"{self.api_endpoint}/dags/{dag_id}/dagRuns"
-        
-        payload = {
-            "dag_run_id": f"api_trigger_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            "conf": conf or {}
-        }
-        
-        # Create AWS request
-        request = AWSRequest(
-            method='POST',
-            url=url,
-            data=json.dumps(payload),
-            headers={'Content-Type': 'application/json'}
-        )
-        
-        # Sign request
-        SigV4Auth(self.session.get_credentials(), 'airflow', 'us-east-1').add_auth(request)
-        
-        # Send request
-        response = requests.post(
-            url,
-            data=request.body,
-            headers=dict(request.headers)
-        )
-        
-        return response.json()
-    
-    def get_dag_run_status(self, dag_id, dag_run_id):
-        """Get DAG run status"""
-        if not self.session:
-            self.assume_role()
-            
-        url = f"{self.api_endpoint}/dags/{dag_id}/dagRuns/{dag_run_id}"
-        
-        request = AWSRequest(method='GET', url=url)
-        SigV4Auth(self.session.get_credentials(), 'airflow', 'us-east-1').add_auth(request)
-        
-        response = requests.get(url, headers=dict(request.headers))
-        return response.json()
-
-# Usage example
-if __name__ == "__main__":
-    client = MWAAAPIClient(
-        role_arn='arn:aws:iam::123456789012:role/OnPremises-MWAA-API-Role',
-        external_id='unique-external-id',
-        api_endpoint='https://mwaa-api.service.internal'
-    )
-    
-    # Trigger DAG
-    result = client.trigger_dag(
-        dag_id='data_processing_pipeline',
-        conf={'source_table': 'customers', 'target_bucket': 'processed-data'}
-    )
-    
-    print(f"DAG triggered: {result}")
-```
-
-## 🔍 **DNS Configuration**
-
-### **On-Premises DNS Setup**
-
-```bash
-# Add DNS entry for MWAA API endpoint
-# /etc/hosts or corporate DNS server
-10.0.1.100  mwaa-api.service.internal
-
-# Or use Route 53 Resolver for hybrid DNS
-# Forward queries for service.internal to AWS
-```
-
-### **Route 53 Private Hosted Zone**
-
-```yaml
-PrivateHostedZone:
-  Type: AWS::Route53::HostedZone
-  Properties:
-    Name: service.internal
-    VPCs:
-      - VPCId: !Ref CustomerVPC
-        VPCRegion: !Ref AWS::Region
-      - VPCId: !Ref ServiceVPC
-        VPCRegion: !Ref AWS::Region
-
-MWAAAPIRecord:
-  Type: AWS::Route53::RecordSet
-  Properties:
-    HostedZoneId: !Ref PrivateHostedZone
-    Name: mwaa-api.service.internal
-    Type: A
-    AliasTarget:
-      DNSName: !GetAtt VPCEndpoint.DnsEntries[0].DnsName
-      HostedZoneId: !GetAtt VPCEndpoint.DnsEntries[0].HostedZoneId
-```
-
-## ✅ **Key Benefits of This Architecture**
-
-### **🔒 Security**
-- **Private connectivity** - No internet exposure
-- **IAM authentication** - AWS-native security model
-- **Network isolation** - VPC boundaries maintained
-- **Encrypted transit** - HTTPS end-to-end
-
-### **🚀 Performance**
-- **Direct routing** - Minimal network hops
-- **Load balancing** - High availability and performance
-- **Private backbone** - AWS internal network
-- **Low latency** - Optimized routing paths
-
-### **📈 Scalability**
-- **Auto-scaling** - Load balancers handle traffic spikes
-- **Multi-AZ** - High availability across zones
-- **Elastic** - Scales with demand
-- **Resilient** - Multiple failure domains
-
-### **🔧 Operational**
-- **Centralized management** - Single API endpoint
-- **Monitoring** - CloudWatch integration
-- **Logging** - Complete audit trail
-- **Automation** - Programmatic DAG triggering
-
-**This architecture enables secure, scalable, and performant API access from on-premises applications to MWAA web server while maintaining network isolation and security best practices.**
