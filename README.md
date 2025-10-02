@@ -131,27 +131,23 @@ sequenceDiagram
     CICD->>+S3: 3. 🤖 Automated upload via CodeBuild<br/>Triggered by Git commits
     S3-->>-CICD: ✅ Upload complete
     
-    rect rgb(240, 248, 255)
-        Note over MWAA: 🔄 MWAA Environment Startup/Update
-        
-        MWAA->>+VPE: 4. 🔍 Request S3 access<br/>via VPC Endpoint (private)
-        Note right of VPE: 🔒 Private network only
-        VPE->>+S3: 5. 🔒 Secure S3 connection<br/>No internet routing
-        S3-->>-VPE: 6. 📥 Return requirements.txt
-        VPE-->>-MWAA: 7. 📝 Dependency files
-    end
+    Note over MWAA: 🔄 MWAA Environment Startup/Update
     
-    rect rgb(248, 255, 248)
-        Note over W,WS: 🔧 Installation Phase
-        
-        MWAA->>+W: 8. 🔧 Install on Workers/Schedulers<br/>pip install -r requirements.txt
-        Note right of W: 🔄 Installing packages...
-        W-->>-MWAA: ✅ Installation complete
-        
-        MWAA->>+WS: 9. 🔧 Install on Web Server<br/>pip install -r requirements.txt
-        Note right of WS: 🔄 Installing packages...
-        WS-->>-MWAA: ✅ Installation complete
-    end
+    MWAA->>+VPE: 4. 🔍 Request S3 access<br/>via VPC Endpoint (private)
+    Note right of VPE: 🔒 Private network only
+    VPE->>+S3: 5. 🔒 Secure S3 connection<br/>No internet routing
+    S3-->>-VPE: 6. 📥 Return requirements.txt
+    VPE-->>-MWAA: 7. 📝 Dependency files
+    
+    Note over W,WS: 🔧 Installation Phase
+    
+    MWAA->>+W: 8. 🔧 Install on Workers/Schedulers<br/>pip install -r requirements.txt
+    Note right of W: 🔄 Installing packages...
+    W-->>-MWAA: ✅ Installation complete
+    
+    MWAA->>+WS: 9. 🔧 Install on Web Server<br/>pip install -r requirements.txt
+    Note right of WS: 🔄 Installing packages...
+    WS-->>-MWAA: ✅ Installation complete
     
     Note over W,WS: 🔐 All components use same S3 source<br/>via VPC Endpoint for security
 ```
