@@ -297,7 +297,7 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    ACCOUNTC["🏢 AWS Account C<br/>• Account ID: 987654321098<br/>• Cross-account access<br/>• Shared TGW attachment"]:::accountc
+    ACCOUNTC["🏢 AWS Account C<br/>• Account ID: 123454321011<br/>• Cross-account access<br/>• Shared TGW attachment"]:::accountc
     EC2C["💻 EC2 Instance-C<br/>• External application<br/>• VPC-C 10.4.0.0/16<br/>• Cross-account role"]:::ec2
     VPCC["🏠 VPC-C<br/>• Different AWS account<br/>• 10.4.0.0/16 CIDR<br/>• Shared TGW access"]:::vpcc
     RAM["🤝 Resource Access Manager<br/>• Cross-account TGW sharing<br/>• Resource share invitation<br/>• Trust relationship"]:::ram
