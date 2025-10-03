@@ -1,3 +1,4 @@
+
 #### 🔧 **Configuration Solutions by Scenario**
 
 **1. Gitlab Runners (On-Premises) → MWAA REST API**
@@ -58,16 +59,16 @@ sequenceDiagram
     
     Note over GL,WS: 🌐 Phase 2: DNS Resolution
     
-    GL->>DNS: 3. Resolve MWAA Endpoint
-    Note right of GL: DNS Query:<br/>• Host: mwaa-prod.company.internal<br/>• Type: A record<br/>• Resolver: 192.168.1.10
+    GL->>DNS: 3. Resolve MWAA VPC Endpoint
+    Note right of GL: DNS Query:<br/>• Host: mwaa-prod.us-east-1.airflow.amazonaws.com<br/>• Type: A record<br/>• VPC Endpoint DNS enabled
     
-    DNS-->>GL: 4. Return Private IP
-    Note right of DNS: DNS Response:<br/>• IP: 10.1.10.100<br/>• TTL: 300 seconds<br/>• Zone: company.internal
+    DNS-->>GL: 4. Return VPC Endpoint IP
+    Note right of DNS: VPC Endpoint DNS:<br/>• IP: 10.1.50.100 (ENI)<br/>• TTL: 60 seconds<br/>• Private DNS zone
     
     Note over GL,WS: 🚀 Phase 3: API Request Flow
     
     GL->>FW: 5. HTTPS POST Request
-    Note right of GL: API Request:<br/>• URL: https://10.1.10.100/api/v1/dags/etl_pipeline/dagRuns<br/>• Method: POST<br/>• Headers: Authorization (SigV4), Content-Type<br/>• Body: DAG configuration JSON
+    Note right of GL: API Request:<br/>• URL: https://mwaa-prod.us-east-1.airflow.amazonaws.com/api/v1/dags/etl_pipeline/dagRuns<br/>• Method: POST<br/>• Headers: Authorization (SigV4), Content-Type<br/>• Body: DAG configuration JSON
     
     FW->>VPN: 6. Route to AWS
     Note right of FW: Firewall Rules:<br/>• Allow HTTPS (443) to 10.1.0.0/16<br/>• Source: Gitlab subnet (192.168.100.0/24)<br/>• Destination: MWAA VPC<br/>• Action: ALLOW
@@ -101,48 +102,52 @@ sequenceDiagram
 
 **2. EC2 Instance-A (VPC-A, Same Account) → MWAA REST API**
 
-### 🏗️ **Same Account VPC Architecture**
+### 🏗️ **Transit Gateway Architecture (Same Account)**
 
 ```mermaid
 graph TB
     EC2A["💻 EC2 Instance-A<br/>• Application server<br/>• VPC-A 10.2.0.0/16<br/>• Private subnet"]:::ec2
-    VPCA["🏠 VPC-A<br/>• Same AWS account<br/>• 10.2.0.0/16 CIDR<br/>• Private subnets only"]:::vpca
-    PEERING["🔗 VPC Peering<br/>• pcx-mwaa-vpc-a<br/>• Cross-VPC routing<br/>• Same account"]:::peering
-    MWAAVPC["🏠 MWAA Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• PRIVATE_ONLY mode<br/>• Managed by AWS"]:::mwaavpc
-    WEBSERVER["🌐 MWAA Web Server<br/>• REST API endpoints<br/>• 10.1.10.100<br/>• IAM authentication"]:::webserver
-    ROUTE53["🌐 Route 53 Resolver<br/>• Cross-VPC DNS<br/>• Private hosted zone<br/>• Automatic resolution"]:::dns
-    IAM["👤 AWS IAM<br/>• Instance profile<br/>• Cross-service access<br/>• Same account trust"]:::iam
+    VPCA["🏠 VPC-A<br/>• Same AWS account<br/>• 10.2.0.0/16 CIDR<br/>• TGW attachment"]:::vpca
+    TGW["🌐 Transit Gateway<br/>• tgw-12345<br/>• Multi-VPC routing<br/>• Same account"]:::tgw
+    SERVICEVPC["🏠 Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• Customer managed<br/>• VPC Endpoint subnet"]:::servicevpc
+    VPCENDPOINT["🔌 MWAA VPC Endpoint<br/>• Interface endpoint<br/>• com.amazonaws.us-east-1.airflow<br/>• Private DNS enabled"]:::vpcendpoint
+    MWAASERVICE["☁️ MWAA Service<br/>• AWS Managed<br/>• PRIVATE_ONLY mode<br/>• Accessed via VPC Endpoint"]:::mwaaservice
+    ROUTE53["🌐 Route 53 Resolver<br/>• TGW DNS forwarding<br/>• VPC Endpoint DNS<br/>• Cross-VPC resolution"]:::dns
+    IAM["👤 AWS IAM<br/>• Instance profile<br/>• Same account access<br/>• Simplified trust"]:::iam
     
     EC2A -->|API Calls| VPCA
-    VPCA -->|Peering Connection| PEERING
-    PEERING -->|Direct Routing| MWAAVPC
-    MWAAVPC -->|Internal Access| WEBSERVER
+    VPCA -->|TGW Attachment| TGW
+    TGW -->|Route Propagation| SERVICEVPC
+    SERVICEVPC -->|VPC Endpoint| VPCENDPOINT
+    VPCENDPOINT -->|AWS PrivateLink| MWAASERVICE
     
-    ROUTE53 -.->|DNS Resolution| WEBSERVER
+    ROUTE53 -.->|VPC Endpoint DNS| VPCENDPOINT
     EC2A -.->|DNS Query| ROUTE53
     IAM -.->|Instance Profile| EC2A
-    IAM -.->|Authorization| WEBSERVER
+    IAM -.->|Authorization| MWAASERVICE
     
     classDef ec2 fill:#FF6B35,stroke:#FF4500,stroke-width:4px,color:#fff
     classDef vpca fill:#32CD32,stroke:#228B22,stroke-width:4px,color:#fff
-    classDef peering fill:#4ECDC4,stroke:#20B2AA,stroke-width:4px,color:#fff
-    classDef mwaavpc fill:#96CEB4,stroke:#32CD32,stroke-width:4px,color:#fff
-    classDef webserver fill:#FF9FF3,stroke:#FF69B4,stroke-width:4px,color:#fff
+    classDef tgw fill:#45B7D1,stroke:#1E90FF,stroke-width:4px,color:#fff
+    classDef servicevpc fill:#96CEB4,stroke:#32CD32,stroke-width:4px,color:#fff
+    classDef vpcendpoint fill:#4ECDC4,stroke:#20B2AA,stroke-width:4px,color:#fff
+    classDef mwaaservice fill:#FF9FF3,stroke:#FF69B4,stroke-width:4px,color:#fff
     classDef dns fill:#54A0FF,stroke:#4169E1,stroke-width:4px,color:#fff
     classDef iam fill:#FFD700,stroke:#FFA500,stroke-width:4px,color:#000
 ```
 
-### 🔄 **Same Account API Sequence**
+### 🔄 **Transit Gateway API Sequence (Same Account)**
 
 ```mermaid
 sequenceDiagram
     participant EC2 as 💻 EC2 Instance-A
     participant VPCA as 🏠 VPC-A
-    participant PCX as 🔗 VPC Peering
-    participant MWAAVPC as 🏠 MWAA VPC
+    participant TGW as 🌐 Transit Gateway
+    participant SERVICEVPC as 🏠 Service VPC
+    participant VPCE as 🔌 VPC Endpoint
     participant DNS as 🌐 Route 53
     participant IAM as 👤 AWS IAM
-    participant WS as 🌐 MWAA Web Server
+    participant MWAA as ☁️ MWAA Service
     
     Note over EC2,WS: 🔐 Phase 1: Instance Profile Authentication
     
@@ -157,40 +162,44 @@ sequenceDiagram
     EC2->>DNS: 3. Resolve MWAA Endpoint
     Note right of EC2: DNS Query:<br/>• Host: mwaa-prod.internal<br/>• Resolver: VPC DNS (10.2.0.2)<br/>• Query Type: A record
     
-    DNS-->>EC2: 4. Return MWAA IP Address
-    Note right of DNS: DNS Response:<br/>• IP: 10.1.10.100 (MWAA VPC)<br/>• TTL: 300 seconds<br/>• Resolved via peering
+    DNS-->>EC2: 4. Return VPC Endpoint IP
+    Note right of DNS: VPC Endpoint DNS:<br/>• IP: 10.1.50.100 (VPC Endpoint ENI)<br/>• TTL: 60 seconds<br/>• Resolved via peering
     
     Note over EC2,WS: 🚀 Phase 3: Cross-VPC API Call
     
     EC2->>VPCA: 5. Initiate HTTPS Request
-    Note right of EC2: API Request:<br/>• URL: https://10.1.10.100/api/v1/dags/data_processing/dagRuns<br/>• Method: POST<br/>• Headers: Authorization (SigV4)<br/>• Source IP: 10.2.1.100
+    Note right of EC2: API Request:<br/>• URL: https://mwaa-prod.us-east-1.airflow.amazonaws.com/api/v1/dags/data_processing/dagRuns<br/>• Method: POST<br/>• Headers: Authorization (SigV4)<br/>• Source IP: 10.2.1.100
     
-    VPCA->>PCX: 6. Route via VPC Peering
-    Note right of VPCA: VPC-A Route Table:<br/>• Destination: 10.1.0.0/16<br/>• Target: pcx-mwaa-vpc-a<br/>• Status: Active<br/>• Local preference: 100
+    VPCA->>TGW: 6. Route via Transit Gateway
+    Note right of VPCA: VPC-A Route Table:<br/>• Destination: 10.1.0.0/16<br/>• Target: tgw-12345<br/>• Attachment: tgw-attach-vpc-a<br/>• Status: Active
     
-    PCX->>MWAAVPC: 7. Forward to MWAA VPC
-    Note right of PCX: Peering Connection:<br/>• Connection ID: pcx-mwaa-vpc-a<br/>• Status: Active<br/>• Accepter VPC: vpc-mwaa-service<br/>• Requester VPC: vpc-a-12345
+    TGW->>SERVICEVPC: 7. Forward to Service VPC
+    Note right of TGW: TGW Route Table:<br/>• Route: 10.1.0.0/16 → vpc-service<br/>• Association: tgw-rtb-main<br/>• Propagation: Active<br/>• Same account routing
     
-    MWAAVPC->>WS: 8. Deliver to Web Server
-    Note right of MWAAVPC: MWAA VPC Security:<br/>• Security Group: sg-mwaa-webserver<br/>• Inbound Rule: 443 from 10.2.0.0/16<br/>• Source: VPC-A instances<br/>• Action: ALLOW
+    SERVICEVPC->>VPCE: 8. Route to VPC Endpoint
+    Note right of SERVICEVPC: Service VPC Routing:<br/>• VPC Endpoint subnet: 10.1.50.0/24<br/>• Security Group: Allow 443 from 10.2.0.0/16<br/>• Source: VPC-A instances<br/>• Action: ALLOW
+    
+    VPCE->>MWAA: 8a. Interface to MWAA Service
+    Note right of VPCE: VPC Endpoint:<br/>• Service: com.amazonaws.us-east-1.airflow<br/>• Type: Interface endpoint<br/>• ENI: 10.1.50.100<br/>• AWS PrivateLink connection
     
     Note over EC2,WS: 🔍 Phase 4: Same Account Processing
     
-    WS->>IAM: 9. Validate Instance Profile
-    Note right of WS: Authentication Validation:<br/>• Principal: arn:aws:sts::123456789012:assumed-role/EC2-MWAA-Access-Role/i-0123456789abcdef0<br/>• Signature: AWS4-HMAC-SHA256<br/>• Same account trust: Simplified
+    MWAA->>IAM: 9. Validate Instance Profile
+    Note right of MWAA: Authentication Validation:<br/>• Principal: arn:aws:sts::123456789012:assumed-role/EC2-MWAA-Access-Role/i-0123456789abcdef0<br/>• Signature: AWS4-HMAC-SHA256<br/>• Same account trust: Simplified
     
-    IAM-->>WS: 10. Authorization Success
+    IAM-->>MWAA: 10. Authorization Success
     Note right of IAM: Policy Check:<br/>• Action: airflow:CreateDagRun<br/>• Resource: arn:aws:airflow:us-east-1:123456789012:environment/mwaa-prod<br/>• Same account: Direct access<br/>• Result: ALLOW
     
-    WS->>WS: 11. Execute DAG Trigger
-    Note right of WS: DAG Processing:<br/>• DAG ID: data_processing<br/>• Trigger Type: API<br/>• Run ID: api__2024-01-15T14:45:00+00:00<br/>• Queue: default
+    MWAA->>MWAA: 11. Execute DAG Trigger
+    Note right of MWAA: DAG Processing:<br/>• DAG ID: data_processing<br/>• Trigger Type: API<br/>• Run ID: api__2024-01-15T14:45:00+00:00<br/>• Queue: default
     
-    WS-->>MWAAVPC: 12. Return API Response
-    Note right of WS: Success Response:<br/>• Status: 201 Created<br/>• Response Time: 180ms<br/>• DAG Run Created<br/>• Same account efficiency
+    MWAA-->>VPCE: 12. Return API Response
+    Note right of MWAA: Success Response:<br/>• Status: 201 Created<br/>• Response Time: 180ms<br/>• DAG Run Created<br/>• Same account efficiency
     
-    MWAAVPC-->>PCX: 13. Route Back via Peering
-    PCX-->>VPCA: 14. Return to VPC-A
-    VPCA-->>EC2: 15. Deliver Response
+    VPCE-->>SERVICEVPC: 13. Route Back via VPC Endpoint
+    SERVICEVPC-->>TGW: 14. Return via Transit Gateway
+    TGW-->>VPCA: 15. Return to VPC-A
+    VPCA-->>EC2: 16. Deliver Response
     
     Note right of EC2: Application Success:<br/>• DAG triggered from EC2<br/>• Same account simplicity<br/>• Low latency via peering<br/>• Direct VPC connectivity
 ```
@@ -253,13 +262,13 @@ sequenceDiagram
     EC2->>DNS: 3. Resolve MWAA via TGW
     Note right of EC2: DNS Query:<br/>• Host: mwaa-prod.aws.internal<br/>• Resolver: VPC-B DNS (10.3.0.2)<br/>• TGW DNS forwarding enabled
     
-    DNS-->>EC2: 4. Return MWAA Private IP
-    Note right of DNS: TGW DNS Response:<br/>• IP: 10.1.10.100<br/>• Resolved via TGW routing<br/>• Cross-VPC DNS working<br/>• TTL: 300 seconds
+    DNS-->>EC2: 4. Return VPC Endpoint IP
+    Note right of DNS: VPC Endpoint DNS:<br/>• IP: 10.1.50.100 (VPC Endpoint ENI)<br/>• Resolved via TGW routing<br/>• Cross-VPC DNS working<br/>• TTL: 60 seconds
     
     Note over EC2,WS: 🚀 Phase 3: TGW Routing Flow
     
     EC2->>VPCB: 5. Initiate Batch API Call
-    Note right of EC2: Batch API Request:<br/>• URL: https://10.1.10.100/api/v1/dags/batch_etl/dagRuns<br/>• Method: POST<br/>• Payload: Batch job parameters<br/>• Source: 10.3.1.50
+    Note right of EC2: Batch API Request:<br/>• URL: https://mwaa-prod.us-east-1.airflow.amazonaws.com/api/v1/dags/batch_etl/dagRuns<br/>• Method: POST<br/>• Payload: Batch job parameters<br/>• Source: 10.3.1.50
     
     VPCB->>TGW: 6. Route via Transit Gateway
     Note right of VPCB: VPC-B Route Table:<br/>• Destination: 10.1.0.0/16<br/>• Target: tgw-12345<br/>• Attachment: tgw-attach-vpc-b<br/>• Propagation: Enabled
@@ -337,10 +346,11 @@ sequenceDiagram
     participant VPCC as 🏠 VPC-C (Account C)
     participant RAM as 🤝 Resource Manager
     participant TGW as 🌐 Transit Gateway
-    participant MWAAVPC as 🏠 MWAA VPC (Account A)
+    participant SERVICEVPC as 🏠 Service VPC (Account A)
+    participant VPCE as 🔌 VPC Endpoint
     participant IAMA as 👤 IAM Account A
     participant IAMC as 👤 IAM Account C
-    participant WS as 🌐 MWAA Web Server
+    participant MWAA as ☁️ MWAA Service
     
     Note over EC2,WS: 🔐 Phase 1: Cross-Account Authentication
     
@@ -359,7 +369,7 @@ sequenceDiagram
     Note over EC2,WS: 🌐 Phase 2: Cross-Account Network Routing
     
     EC2->>VPCC: 5. Initiate Cross-Account API Call
-    Note right of EC2: Cross-Account Request:<br/>• URL: https://10.1.10.100/api/v1/dags/external_integration/dagRuns<br/>• Method: POST<br/>• Headers: Authorization (Account A credentials)<br/>• Source: 10.4.1.75 (Account C)
+    Note right of EC2: Cross-Account Request:<br/>• URL: https://10.mwaa-prod.us-east-1.airflow.amazonaws.com/api/v1/dags/external_integration/dagRuns<br/>• Method: POST<br/>• Headers: Authorization (Account A credentials)<br/>• Source: 10.4.1.75 (Account C)
     
     VPCC->>RAM: 6. Access Shared TGW
     Note right of VPCC: Resource Share Access:<br/>• Shared Resource: tgw-12345<br/>• Resource Share: MWAA-TGW-Share<br/>• Owner Account: 123456789012<br/>• Consumer Account: 987654321098
@@ -367,30 +377,34 @@ sequenceDiagram
     RAM->>TGW: 7. Route via Shared TGW
     Note right of RAM: Cross-Account Routing:<br/>• TGW Owner: Account A (123456789012)<br/>• TGW Consumer: Account C (123454321011)<br/>• Route Table: Cross-account routes enabled<br/>• Destination: 10.1.0.0/16 (MWAA VPC)
     
-    TGW->>MWAAVPC: 8. Forward to MWAA VPC
-    Note right of TGW: TGW Cross-Account Route:<br/>• Source Account: 123454321011<br/>• Source VPC: vpc-c-external<br/>• Target Account: 123456789012<br/>• Target VPC: vpc-mwaa-service
+    TGW->>SERVICEVPC: 8. Forward to Service VPC
+    Note right of TGW: TGW Cross-Account Route:<br/>• Source Account: 123454321011<br/>• Source VPC: vpc-c-external<br/>• Target Account: 123456789012<br/>• Target VPC: vpc-service (Customer VPC)
     
-    MWAAVPC->>WS: 9. Deliver to Web Server
-    Note right of MWAAVPC: Cross-Account Security:<br/>• Security Group: Allow 443 from 10.4.0.0/16<br/>• Source: Account C VPC CIDR<br/>• Cross-account trust required<br/>• Action: ALLOW
+    SERVICEVPC->>VPCE: 8a. Route to VPC Endpoint
+    Note right of SERVICEVPC: Service VPC Security:<br/>• Security Group: Allow 443 from 10.4.0.0/16<br/>• Source: Account C VPC CIDR<br/>• Cross-account trust required<br/>• Action: ALLOW
+    
+    VPCE->>MWAA: 9. Interface to MWAA Service
+    Note right of VPCE: VPC Endpoint Access:<br/>• Service: com.amazonaws.us-east-1.airflow<br/>• AWS Managed MWAA Service<br/>• PrivateLink connection<br/>• Cross-account access
     
     Note over EC2,WS: 🔍 Phase 3: Cross-Account Authorization
     
-    WS->>IAMA: 10. Validate Cross-Account Role
+    MWAA->>IAMA: 10. Validate Cross-Account Role
     Note right of WS: Cross-Account Validation:<br/>• Principal: arn:aws:sts::123456789012:assumed-role/CrossAccountMWAAAccess/cross-account-mwaa-session<br/>• Original Account: 123454321011<br/>• External ID: external-app-12345<br/>• Trust Policy: Verified
     
-    IAMA-->>WS: 11. Authorize Cross-Account Access
+    IAMA-->>MWAA: 11. Authorize Cross-Account Access
     Note right of IAMA: Cross-Account Policy:<br/>• Action: airflow:CreateDagRun<br/>• Resource: arn:aws:airflow:us-east-1:123456789012:environment/mwaa-prod<br/>• Condition: External ID match<br/>• Principal: Account C assumed role<br/>• Result: ALLOW
     
-    WS->>WS: 12. Process External Integration DAG
+    MWAA->>MWAA: 12. Process External Integration DAG
     Note right of WS: External DAG Execution:<br/>• DAG ID: external_integration<br/>• Trigger: Cross-account API<br/>• Run ID: external__2024-01-15T15:15:00+00:00<br/>• Source Account: 123454321011
     
-    WS-->>MWAAVPC: 13. Return Cross-Account Response
-    Note right of WS: Cross-Account Response:<br/>• Status: 201 Created<br/>• Cross-account DAG triggered<br/>• External integration successful<br/>• Response time: 350ms
+    MWAA-->>VPCE: 13. Return Cross-Account Response
+    Note right of MWAA: Cross-Account Response:<br/>• Status: 201 Created<br/>• Cross-account DAG triggered<br/>• External integration successful<br/>• Response time: 350ms
     
-    MWAAVPC-->>TGW: 14. Route Back via Shared TGW
-    TGW-->>RAM: 15. Return via Resource Share
-    RAM-->>VPCC: 16. Deliver to Account C VPC
-    VPCC-->>EC2: 17. Return to External Instance
+    VPCE-->>SERVICEVPC: 14. Route Back via VPC Endpoint
+    SERVICEVPC-->>TGW: 15. Route Back via Shared TGW
+    TGW-->>RAM: 16. Return via Resource Share
+    RAM-->>VPCC: 17. Deliver to Account C VPC
+    VPCC-->>EC2: 18. Return to External Instance
     
     Note right of EC2: Cross-Account Success:<br/>• External system integrated<br/>• Cross-account trust working<br/>• Shared TGW routing efficient<br/>• Secure cross-account access
 ```
@@ -468,7 +482,7 @@ graph TB
 
 ```mermaid
 graph TB
-    PHASE1["🔧 Phase 1: Network Foundation<br/>• VPN/Direct Connect setup<br/>• Transit Gateway configuration<br/>• VPC peering if needed<br/>• DNS resolution setup"]:::phase1
+    PHASE1["🔧 Phase 1: Network Foundation<br/>• VPN/Direct Connect setup<br/>• Transit Gateway configuration<br/>• VPC Endpoint deployment<br/>• DNS resolution setup"]:::phase1
     
     PHASE2["🛡️ Phase 2: Security Configuration<br/>• IAM roles and policies<br/>• Security group rules<br/>• Cross-account trust setup<br/>• External ID validation"]:::phase2
     
@@ -496,7 +510,7 @@ graph TB
 
 ```mermaid
 graph TB
-    NETWORK[🌐 Network Validation<br/>• Ping tests to MWAA VPC<br/>• DNS resolution working<br/>• Route table verification<br/>• Security group testing]:::network
+    NETWORK[🌐 Network Validation<br/>• VPC Endpoint connectivity<br/>• DNS resolution working<br/>• TGW route table verification<br/>• Security group testing]:::network
     
     AUTH[🔐 Authentication Validation<br/>• SigV4 signature working<br/>• IAM role assumption<br/>• Cross-account trust<br/>• Token expiration handling]:::auth
     
