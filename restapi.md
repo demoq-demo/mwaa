@@ -67,7 +67,7 @@ sequenceDiagram
     Note over GL,WS: 🚀 Phase 3: API Request Flow
     
     GL->>FW: 5. HTTPS POST Request
-    Note right of GL: API Request:<br/>• URL: https://10.1.10.100/api/v1/dags/etl_pipeline/dagRuns<br/>• Method: POST<br/>• Headers: Authorization (SigV4), Content-Type<br/>• Body: {"conf": {"env": "prod"}}
+    Note right of GL: API Request:<br/>• URL: https://10.1.10.100/api/v1/dags/etl_pipeline/dagRuns<br/>• Method: POST<br/>• Headers: Authorization (SigV4), Content-Type<br/>• Body: DAG configuration JSON
     
     FW->>VPN: 6. Route to AWS
     Note right of FW: Firewall Rules:<br/>• Allow HTTPS (443) to 10.1.0.0/16<br/>• Source: Gitlab subnet (192.168.100.0/24)<br/>• Destination: MWAA VPC<br/>• Action: ALLOW
@@ -81,10 +81,10 @@ sequenceDiagram
     Note over GL,WS: 🔍 Phase 4: API Processing
     
     WS->>IAM: 9. Validate SigV4 Signature
-    Note right of WS: Authentication Check:<br/>• Signature Algorithm: AWS4-HMAC-SHA256<br/>• Credential Scope: 20240115/us-east-1/airflow/aws4_request<br/>• Signed Headers: host;x-amz-date<br/>• Request Hash: SHA256
+    Note right of WS: Authentication Check:<br/>• Signature Algorithm: AWS4-HMAC-SHA256<br/>• Credential Scope: 20240115/us-east-1/airflow/aws4_request<br/>• Signed Headers: host and x-amz-date<br/>• Request Hash: SHA256
     
     IAM-->>WS: 10. Authorization Result
-    Note right of IAM: Policy Evaluation:<br/>• Action: airflow:CreateDagRun<br/>• Resource: arn:aws:airflow:us-east-1:123456789012:environment/mwaa-prod<br/>• Principal: arn:aws:sts::123456789012:assumed-role/GitlabMWAARole/gitlab-session<br/>• Result: ALLOW
+    Note right of IAM: Policy Evaluation:<br/>• Action: airflow:CreateDagRun<br/>• Resource: MWAA environment ARN<br/>• Principal: GitlabMWAARole assumed role<br/>• Result: ALLOW
     
     WS->>WS: 11. Process DAG Trigger
     Note right of WS: DAG Execution:<br/>• DAG ID: etl_pipeline<br/>• Run ID: manual__2024-01-15T14:30:00+00:00<br/>• State: running<br/>• Tasks: 5 queued
