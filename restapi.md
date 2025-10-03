@@ -345,7 +345,7 @@ sequenceDiagram
     Note over EC2,WS: 🔐 Phase 1: Cross-Account Authentication
     
     EC2->>IAMC: 1. Get Instance Profile (Account C)
-    Note right of EC2: Account C Credentials:<br/>• Role: EC2-CrossAccount-Role<br/>• Account: 987654321098<br/>• Instance: i-0abcdef123456789<br/>• VPC: vpc-c-external
+    Note right of EC2: Account C Credentials:<br/>• Role: EC2-CrossAccount-Role<br/>• Account: 123454321011<br/>• Instance: i-0abcdef123456789<br/>• VPC: vpc-c-external
     
     IAMC-->>EC2: 2. Return Account C Credentials
     Note right of IAMC: Local Credentials:<br/>• AccessKeyId: ASIA...<br/>• SecretAccessKey: account-c-key<br/>• Token: account-c-token<br/>• Account: 987654321098
@@ -365,10 +365,10 @@ sequenceDiagram
     Note right of VPCC: Resource Share Access:<br/>• Shared Resource: tgw-12345<br/>• Resource Share: MWAA-TGW-Share<br/>• Owner Account: 123456789012<br/>• Consumer Account: 987654321098
     
     RAM->>TGW: 7. Route via Shared TGW
-    Note right of RAM: Cross-Account Routing:<br/>• TGW Owner: Account A (123456789012)<br/>• TGW Consumer: Account C (987654321098)<br/>• Route Table: Cross-account routes enabled<br/>• Destination: 10.1.0.0/16 (MWAA VPC)
+    Note right of RAM: Cross-Account Routing:<br/>• TGW Owner: Account A (123456789012)<br/>• TGW Consumer: Account C (123454321011)<br/>• Route Table: Cross-account routes enabled<br/>• Destination: 10.1.0.0/16 (MWAA VPC)
     
     TGW->>MWAAVPC: 8. Forward to MWAA VPC
-    Note right of TGW: TGW Cross-Account Route:<br/>• Source Account: 987654321098<br/>• Source VPC: vpc-c-external<br/>• Target Account: 123456789012<br/>• Target VPC: vpc-mwaa-service
+    Note right of TGW: TGW Cross-Account Route:<br/>• Source Account: 123454321011<br/>• Source VPC: vpc-c-external<br/>• Target Account: 123456789012<br/>• Target VPC: vpc-mwaa-service
     
     MWAAVPC->>WS: 9. Deliver to Web Server
     Note right of MWAAVPC: Cross-Account Security:<br/>• Security Group: Allow 443 from 10.4.0.0/16<br/>• Source: Account C VPC CIDR<br/>• Cross-account trust required<br/>• Action: ALLOW
@@ -376,13 +376,13 @@ sequenceDiagram
     Note over EC2,WS: 🔍 Phase 3: Cross-Account Authorization
     
     WS->>IAMA: 10. Validate Cross-Account Role
-    Note right of WS: Cross-Account Validation:<br/>• Principal: arn:aws:sts::123456789012:assumed-role/CrossAccountMWAAAccess/cross-account-mwaa-session<br/>• Original Account: 987654321098<br/>• External ID: external-app-12345<br/>• Trust Policy: Verified
+    Note right of WS: Cross-Account Validation:<br/>• Principal: arn:aws:sts::123456789012:assumed-role/CrossAccountMWAAAccess/cross-account-mwaa-session<br/>• Original Account: 123454321011<br/>• External ID: external-app-12345<br/>• Trust Policy: Verified
     
     IAMA-->>WS: 11. Authorize Cross-Account Access
     Note right of IAMA: Cross-Account Policy:<br/>• Action: airflow:CreateDagRun<br/>• Resource: arn:aws:airflow:us-east-1:123456789012:environment/mwaa-prod<br/>• Condition: External ID match<br/>• Principal: Account C assumed role<br/>• Result: ALLOW
     
     WS->>WS: 12. Process External Integration DAG
-    Note right of WS: External DAG Execution:<br/>• DAG ID: external_integration<br/>• Trigger: Cross-account API<br/>• Run ID: external__2024-01-15T15:15:00+00:00<br/>• Source Account: 987654321098
+    Note right of WS: External DAG Execution:<br/>• DAG ID: external_integration<br/>• Trigger: Cross-account API<br/>• Run ID: external__2024-01-15T15:15:00+00:00<br/>• Source Account: 123454321011
     
     WS-->>MWAAVPC: 13. Return Cross-Account Response
     Note right of WS: Cross-Account Response:<br/>• Status: 201 Created<br/>• Cross-account DAG triggered<br/>• External integration successful<br/>• Response time: 350ms
