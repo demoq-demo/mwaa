@@ -105,13 +105,13 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    EC2A[💻 EC2 Instance-A<br/>• Application server<br/>• VPC-A (10.2.0.0/16)<br/>• Private subnet]:::ec2
-    VPCA[🏠 VPC-A<br/>• Same AWS account<br/>• 10.2.0.0/16 CIDR<br/>• Private subnets only]:::vpca
-    PEERING[🔗 VPC Peering<br/>• pcx-mwaa-vpc-a<br/>• Cross-VPC routing<br/>• Same account]:::peering
-    MWAAVPC[🏠 MWAA Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• PRIVATE_ONLY mode<br/>• Managed by AWS]:::mwaavpc
-    WEBSERVER[🌐 MWAA Web Server<br/>• REST API endpoints<br/>• 10.1.10.100<br/>• IAM authentication]:::webserver
-    ROUTE53[🌐 Route 53 Resolver<br/>• Cross-VPC DNS<br/>• Private hosted zone<br/>• Automatic resolution]:::dns
-    IAM[👤 AWS IAM<br/>• Instance profile<br/>• Cross-service access<br/>• Same account trust]:::iam
+    EC2A["💻 EC2 Instance-A<br/>• Application server<br/>• VPC-A 10.2.0.0/16<br/>• Private subnet"]:::ec2
+    VPCA["🏠 VPC-A<br/>• Same AWS account<br/>• 10.2.0.0/16 CIDR<br/>• Private subnets only"]:::vpca
+    PEERING["🔗 VPC Peering<br/>• pcx-mwaa-vpc-a<br/>• Cross-VPC routing<br/>• Same account"]:::peering
+    MWAAVPC["🏠 MWAA Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• PRIVATE_ONLY mode<br/>• Managed by AWS"]:::mwaavpc
+    WEBSERVER["🌐 MWAA Web Server<br/>• REST API endpoints<br/>• 10.1.10.100<br/>• IAM authentication"]:::webserver
+    ROUTE53["🌐 Route 53 Resolver<br/>• Cross-VPC DNS<br/>• Private hosted zone<br/>• Automatic resolution"]:::dns
+    IAM["👤 AWS IAM<br/>• Instance profile<br/>• Cross-service access<br/>• Same account trust"]:::iam
     
     EC2A -->|API Calls| VPCA
     VPCA -->|Peering Connection| PEERING
