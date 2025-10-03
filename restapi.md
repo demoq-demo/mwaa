@@ -1,4 +1,3 @@
-
 #### 🔧 **Configuration Solutions by Scenario**
 
 **1. Gitlab Runners (On-Premises) → MWAA REST API**
@@ -312,8 +311,9 @@ graph TB
     RAM["🤝 Resource Access Manager<br/>• Cross-account TGW sharing<br/>• Resource share invitation<br/>• Trust relationship"]:::ram
     TGW["🌐 Transit Gateway<br/>• Shared resource<br/>• Cross-account routing<br/>• Account A owned"]:::tgw
     ACCOUNTA["🏢 AWS Account A<br/>• Account ID: 123456789012<br/>• MWAA environment<br/>• TGW owner"]:::accounta
-    MWAAVPC["🏠 MWAA Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• Account A managed<br/>• Cross-account access"]:::mwaavpc
-    WEBSERVER["🌐 MWAA Web Server<br/>• REST API endpoints<br/>• Cross-account auth<br/>• 10.1.10.100"]:::webserver
+    SERVICEVPC["🏠 Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• Account A managed<br/>• VPC Endpoint subnet"]:::servicevpc
+    VPCENDPOINT["🔌 MWAA VPC Endpoint<br/>• Interface endpoint<br/>• com.amazonaws.us-east-1.airflow<br/>• Cross-account access"]:::vpcendpoint
+    MWAASERVICE["☁️ MWAA Service<br/>• AWS Managed<br/>• PRIVATE_ONLY mode<br/>• Cross-account auth"]:::mwaaservice
     IAM["👤 Cross-Account IAM<br/>• AssumeRole trust<br/>• External ID validation<br/>• Cross-account policy"]:::iam
     
     ACCOUNTC --> EC2C
@@ -321,11 +321,12 @@ graph TB
     VPCC --> RAM
     RAM --> TGW
     TGW --> ACCOUNTA
-    ACCOUNTA --> MWAAVPC
-    MWAAVPC --> WEBSERVER
+    ACCOUNTA --> SERVICEVPC
+    SERVICEVPC --> VPCENDPOINT
+    VPCENDPOINT --> MWAASERVICE
     
     IAM -.->|Cross-Account Trust| EC2C
-    IAM -.->|Authorization| WEBSERVER
+    IAM -.->|Authorization| MWAASERVICE
     
     classDef accountc fill:#E74C3C,stroke:#C0392B,stroke-width:4px,color:#fff
     classDef ec2 fill:#FF6B35,stroke:#FF4500,stroke-width:4px,color:#fff
@@ -333,8 +334,9 @@ graph TB
     classDef ram fill:#F39C12,stroke:#E67E22,stroke-width:4px,color:#fff
     classDef tgw fill:#45B7D1,stroke:#1E90FF,stroke-width:4px,color:#fff
     classDef accounta fill:#27AE60,stroke:#229954,stroke-width:4px,color:#fff
-    classDef mwaavpc fill:#96CEB4,stroke:#32CD32,stroke-width:4px,color:#fff
-    classDef webserver fill:#FF9FF3,stroke:#FF69B4,stroke-width:4px,color:#fff
+    classDef servicevpc fill:#96CEB4,stroke:#32CD32,stroke-width:4px,color:#fff
+    classDef vpcendpoint fill:#4ECDC4,stroke:#20B2AA,stroke-width:4px,color:#fff
+    classDef mwaaservice fill:#FF9FF3,stroke:#FF69B4,stroke-width:4px,color:#fff
     classDef iam fill:#FFD700,stroke:#FFA500,stroke-width:4px,color:#000
 ```
 
@@ -441,6 +443,39 @@ graph TB
     classDef iam fill:#FFD700,stroke:#FFA500,stroke-width:3px,color:#000
     classDef policy fill:#54A0FF,stroke:#4169E1,stroke-width:3px,color:#fff
     classDef security fill:#FF9FF3,stroke:#FF69B4,stroke-width:3px,color:#fff
+```
+
+#### 🚀 **Alternative: API Gateway Integration**
+
+### 🌐 **API Gateway Proxy Architecture**
+
+```mermaid
+graph TB
+    CLIENTS[🔗 API Clients<br/>• On-premises apps<br/>• EC2 instances<br/>• External systems<br/>• Unified access point]:::clients
+    
+    APIGW[🚪 API Gateway<br/>• Private REST API<br/>• Custom authentication<br/>• Rate limiting<br/>• Request/response transformation]:::apigw
+    
+    VPCENDPOINT[🔌 VPC Endpoint<br/>• Interface endpoint<br/>• Private connectivity<br/>• DNS resolution<br/>• Security group control]:::endpoint
+    
+    LAMBDA[⚡ Lambda Authorizer<br/>• Custom authentication<br/>• Token validation<br/>• Fine-grained access<br/>• Audit logging]:::lambda
+    
+    MWAAPROXY[🔄 MWAA Proxy<br/>• Request forwarding<br/>• Response handling<br/>• Error management<br/>• Logging integration]:::proxy
+    
+    MWAAWEBSERVER[🌐 MWAA Web Server<br/>• REST API endpoints<br/>• PRIVATE_ONLY mode<br/>• Internal access only<br/>• IAM authentication]:::mwaa
+    
+    CLIENTS --> APIGW
+    APIGW --> VPCENDPOINT
+    APIGW --> LAMBDA
+    LAMBDA --> APIGW
+    VPCENDPOINT --> MWAAPROXY
+    MWAAPROXY --> MWAAWEBSERVER
+    
+    classDef clients fill:#FF6B35,stroke:#FF4500,stroke-width:3px,color:#fff
+    classDef apigw fill:#96CEB4,stroke:#32CD32,stroke-width:3px,color:#fff
+    classDef endpoint fill:#4ECDC4,stroke:#20B2AA,stroke-width:3px,color:#fff
+    classDef lambda fill:#FF9F43,stroke:#E67E22,stroke-width:3px,color:#fff
+    classDef proxy fill:#45B7D1,stroke:#1E90FF,stroke-width:3px,color:#fff
+    classDef mwaa fill:#FF9FF3,stroke:#FF69B4,stroke-width:3px,color:#fff
 ```
 
 #### 📋 **Implementation Roadmap**
