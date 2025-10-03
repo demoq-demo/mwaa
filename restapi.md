@@ -201,13 +201,13 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    EC2B[💻 EC2 Instance-B<br/>• Batch processing<br/>• VPC-B (10.3.0.0/16)<br/>• Private subnet]:::ec2
-    VPCB[🏠 VPC-B<br/>• Same AWS account<br/>• 10.3.0.0/16 CIDR<br/>• TGW attachment]:::vpcb
-    TGW[🌐 Transit Gateway<br/>• tgw-12345<br/>• Multi-VPC routing<br/>• Route propagation]:::tgw
-    MWAAVPC[🏠 MWAA Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• TGW attachment<br/>• Managed service]:::mwaavpc
-    WEBSERVER[🌐 MWAA Web Server<br/>• REST API endpoints<br/>• 10.1.10.100<br/>• Cross-VPC access]:::webserver
-    ROUTE53[🌐 Route 53 Resolver<br/>• TGW DNS forwarding<br/>• Cross-VPC resolution<br/>• Centralized DNS]:::dns
-    IAM[👤 AWS IAM<br/>• Instance profile<br/>• Same account access<br/>• Simplified trust]:::iam
+    EC2B["💻 EC2 Instance-B<br/>• Batch processing<br/>• VPC-B 10.3.0.0/16<br/>• Private subnet"]:::ec2
+    VPCB["🏠 VPC-B<br/>• Same AWS account<br/>• 10.3.0.0/16 CIDR<br/>• TGW attachment"]:::vpcb
+    TGW["🌐 Transit Gateway<br/>• tgw-12345<br/>• Multi-VPC routing<br/>• Route propagation"]:::tgw
+    MWAAVPC["🏠 MWAA Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• TGW attachment<br/>• Managed service"]:::mwaavpc
+    WEBSERVER["🌐 MWAA Web Server<br/>• REST API endpoints<br/>• 10.1.10.100<br/>• Cross-VPC access"]:::webserver
+    ROUTE53["🌐 Route 53 Resolver<br/>• TGW DNS forwarding<br/>• Cross-VPC resolution<br/>• Centralized DNS"]:::dns
+    IAM["👤 AWS IAM<br/>• Instance profile<br/>• Same account access<br/>• Simplified trust"]:::iam
     
     EC2B -->|API Requests| VPCB
     VPCB -->|TGW Attachment| TGW
