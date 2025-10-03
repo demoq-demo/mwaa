@@ -443,39 +443,6 @@ graph TB
     classDef security fill:#FF9FF3,stroke:#FF69B4,stroke-width:3px,color:#fff
 ```
 
-#### 🚀 **Alternative: API Gateway Integration**
-
-### 🌐 **API Gateway Proxy Architecture**
-
-```mermaid
-graph TB
-    CLIENTS[🔗 API Clients<br/>• On-premises apps<br/>• EC2 instances<br/>• External systems<br/>• Unified access point]:::clients
-    
-    APIGW[🚪 API Gateway<br/>• Private REST API<br/>• Custom authentication<br/>• Rate limiting<br/>• Request/response transformation]:::apigw
-    
-    VPCENDPOINT[🔌 VPC Endpoint<br/>• Interface endpoint<br/>• Private connectivity<br/>• DNS resolution<br/>• Security group control]:::endpoint
-    
-    LAMBDA[⚡ Lambda Authorizer<br/>• Custom authentication<br/>• Token validation<br/>• Fine-grained access<br/>• Audit logging]:::lambda
-    
-    MWAAPROXY[🔄 MWAA Proxy<br/>• Request forwarding<br/>• Response handling<br/>• Error management<br/>• Logging integration]:::proxy
-    
-    MWAAWEBSERVER[🌐 MWAA Web Server<br/>• REST API endpoints<br/>• PRIVATE_ONLY mode<br/>• Internal access only<br/>• IAM authentication]:::mwaa
-    
-    CLIENTS --> APIGW
-    APIGW --> VPCENDPOINT
-    APIGW --> LAMBDA
-    LAMBDA --> APIGW
-    VPCENDPOINT --> MWAAPROXY
-    MWAAPROXY --> MWAAWEBSERVER
-    
-    classDef clients fill:#FF6B35,stroke:#FF4500,stroke-width:3px,color:#fff
-    classDef apigw fill:#96CEB4,stroke:#32CD32,stroke-width:3px,color:#fff
-    classDef endpoint fill:#4ECDC4,stroke:#20B2AA,stroke-width:3px,color:#fff
-    classDef lambda fill:#FF9F43,stroke:#E67E22,stroke-width:3px,color:#fff
-    classDef proxy fill:#45B7D1,stroke:#1E90FF,stroke-width:3px,color:#fff
-    classDef mwaa fill:#FF9FF3,stroke:#FF69B4,stroke-width:3px,color:#fff
-```
-
 #### 📋 **Implementation Roadmap**
 
 ### 🗺️ **Deployment Strategy Overview**
