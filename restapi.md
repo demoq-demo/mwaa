@@ -297,15 +297,15 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    ACCOUNTC[🏢 AWS Account C<br/>• Account ID: 987654321098<br/>• Cross-account access<br/>• Shared TGW attachment]:::accountc
-    EC2C[💻 EC2 Instance-C<br/>• External application<br/>• VPC-C (10.4.0.0/16)<br/>• Cross-account role]:::ec2
-    VPCC[🏠 VPC-C<br/>• Different AWS account<br/>• 10.4.0.0/16 CIDR<br/>• Shared TGW access]:::vpcc
-    RAM[🤝 Resource Access Manager<br/>• Cross-account TGW sharing<br/>• Resource share invitation<br/>• Trust relationship]:::ram
-    TGW[🌐 Transit Gateway<br/>• Shared resource<br/>• Cross-account routing<br/>• Account A owned]:::tgw
-    ACCOUNTA[🏢 AWS Account A<br/>• Account ID: 123456789012<br/>• MWAA environment<br/>• TGW owner]:::accounta
-    MWAAVPC[🏠 MWAA Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• Account A managed<br/>• Cross-account access]:::mwaavpc
-    WEBSERVER[🌐 MWAA Web Server<br/>• REST API endpoints<br/>• Cross-account auth<br/>• 10.1.10.100]:::webserver
-    IAM[👤 Cross-Account IAM<br/>• AssumeRole trust<br/>• External ID validation<br/>• Cross-account policy]:::iam
+    ACCOUNTC["🏢 AWS Account C<br/>• Account ID: 987654321098<br/>• Cross-account access<br/>• Shared TGW attachment"]:::accountc
+    EC2C["💻 EC2 Instance-C<br/>• External application<br/>• VPC-C 10.4.0.0/16<br/>• Cross-account role"]:::ec2
+    VPCC["🏠 VPC-C<br/>• Different AWS account<br/>• 10.4.0.0/16 CIDR<br/>• Shared TGW access"]:::vpcc
+    RAM["🤝 Resource Access Manager<br/>• Cross-account TGW sharing<br/>• Resource share invitation<br/>• Trust relationship"]:::ram
+    TGW["🌐 Transit Gateway<br/>• Shared resource<br/>• Cross-account routing<br/>• Account A owned"]:::tgw
+    ACCOUNTA["🏢 AWS Account A<br/>• Account ID: 123456789012<br/>• MWAA environment<br/>• TGW owner"]:::accounta
+    MWAAVPC["🏠 MWAA Service VPC<br/>• 10.1.0.0/16 CIDR<br/>• Account A managed<br/>• Cross-account access"]:::mwaavpc
+    WEBSERVER["🌐 MWAA Web Server<br/>• REST API endpoints<br/>• Cross-account auth<br/>• 10.1.10.100"]:::webserver
+    IAM["👤 Cross-Account IAM<br/>• AssumeRole trust<br/>• External ID validation<br/>• Cross-account policy"]:::iam
     
     ACCOUNTC --> EC2C
     EC2C --> VPCC
