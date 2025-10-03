@@ -468,15 +468,15 @@ graph TB
 
 ```mermaid
 graph TB
-    PHASE1[🔧 Phase 1: Network Foundation<br/>• VPN/Direct Connect setup<br/>• Transit Gateway configuration<br/>• VPC peering (if needed)<br/>• DNS resolution setup]:::phase1
+    PHASE1["🔧 Phase 1: Network Foundation<br/>• VPN/Direct Connect setup<br/>• Transit Gateway configuration<br/>• VPC peering if needed<br/>• DNS resolution setup"]:::phase1
     
-    PHASE2[🛡️ Phase 2: Security Configuration<br/>• IAM roles and policies<br/>• Security group rules<br/>• Cross-account trust setup<br/>• External ID validation]:::phase2
+    PHASE2["🛡️ Phase 2: Security Configuration<br/>• IAM roles and policies<br/>• Security group rules<br/>• Cross-account trust setup<br/>• External ID validation"]:::phase2
     
-    PHASE3[🧪 Phase 3: Testing & Validation<br/>• Network connectivity tests<br/>• API authentication tests<br/>• DAG trigger validation<br/>• Performance benchmarking]:::phase3
+    PHASE3["🧪 Phase 3: Testing and Validation<br/>• Network connectivity tests<br/>• API authentication tests<br/>• DAG trigger validation<br/>• Performance benchmarking"]:::phase3
     
-    PHASE4[📊 Phase 4: Monitoring & Operations<br/>• CloudWatch logging<br/>• VPC Flow Logs<br/>• CloudTrail API logging<br/>• Alerting configuration]:::phase4
+    PHASE4["📊 Phase 4: Monitoring and Operations<br/>• CloudWatch logging<br/>• VPC Flow Logs<br/>• CloudTrail API logging<br/>• Alerting configuration"]:::phase4
     
-    PHASE5[🚀 Phase 5: Production Migration<br/>• Gitlab CI/CD integration<br/>• Application deployment<br/>• Load testing<br/>• Documentation handover]:::phase5
+    PHASE5["🚀 Phase 5: Production Migration<br/>• Gitlab CI/CD integration<br/>• Application deployment<br/>• Load testing<br/>• Documentation handover"]:::phase5
     
     PHASE1 --> PHASE2
     PHASE2 --> PHASE3
