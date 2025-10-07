@@ -533,3 +533,98 @@ graph TB
     classDef perf fill:#FF9F43,stroke:#E67E22,stroke-width:3px,color:#fff
     classDef monitor fill:#45B7D1,stroke:#1E90FF,stroke-width:3px,color:#fff
 ```
+
+
+### 🖥️ **Federated UI Access Architecture**
+
+```mermaid
+graph TB
+    USER[👤 Corporate User<br/>• Active Directory<br/>• SAML credentials<br/>• Web browser access<br/>• Interactive sessions]:::user
+    
+    CORPIDP[🏢 Corporate Identity Provider<br/>• Active Directory FS<br/>• SAML 2.0 assertions<br/>• Multi-factor authentication<br/>• User attributes & groups]:::corpidp
+    
+    AWSSSO[🔐 AWS SSO<br/>• SAML identity source<br/>• Permission sets<br/>• Account assignments<br/>• Role mapping]:::awssso
+    
+    IAMROLE[👤 IAM Federated Role<br/>• SAML:sub condition<br/>• Temporary credentials<br/>• Session duration: 12h<br/>• Least privilege access]:::iamrole
+    
+    MWAAUI[🌐 MWAA Web Server<br/>• Airflow web interface<br/>• DAG visualization<br/>• Task monitoring<br/>• Log viewing]:::mwaaui
+    
+    PRIVATEVPC[🔒 Private VPC<br/>• No internet gateway<br/>• VPC endpoints only<br/>• Security groups<br/>• Network ACLs]:::privatevpc
+    
+    USER --> CORPIDP
+    CORPIDP --> AWSSSO
+    AWSSSO --> IAMROLE
+    IAMROLE --> PRIVATEVPC
+    PRIVATEVPC --> MWAAUI
+    
+    classDef user fill:#FF6B35,stroke:#FF4500,stroke-width:3px,color:#fff
+    classDef corpidp fill:#FFD700,stroke:#FFA500,stroke-width:3px,color:#000
+    classDef awssso fill:#96CEB4,stroke:#32CD32,stroke-width:3px,color:#fff
+    classDef iamrole fill:#45B7D1,stroke:#1E90FF,stroke-width:3px,color:#fff
+    classDef mwaaui fill:#FF9FF3,stroke:#FF69B4,stroke-width:3px,color:#fff
+    classDef privatevpc fill:#9B59B6,stroke:#8E44AD,stroke-width:3px,color:#fff
+```
+
+### 🔌 **Federated REST API Access Architecture**
+
+```mermaid
+graph TB
+    APP[💻 Application/Service<br/>• CI/CD pipeline<br/>• Monitoring system<br/>• Custom application<br/>• Automated workflows]:::app
+    
+    APPCREDS[🔑 Application Credentials<br/>• Service account<br/>• Client certificate<br/>• API key/secret<br/>• OAuth 2.0 client]:::appcreds
+    
+    AWSSTS[🎫 AWS STS<br/>• AssumeRoleWithSAML<br/>• Temporary credentials<br/>• Session tokens<br/>• Cross-account access]:::awssts
+    
+    IAMAPIROLE[👤 IAM API Role<br/>• Programmatic access<br/>• MWAA API permissions<br/>• Resource-based policies<br/>• Condition-based access]:::iamapirole
+    
+    APIGATEWAY[🚪 API Gateway<br/>• REST API proxy<br/>• Request validation<br/>• Rate limiting<br/>• Custom authorizer]:::apigateway
+    
+    VPCENDPOINT[🔌 VPC Endpoint<br/>• Interface endpoint<br/>• Private connectivity<br/>• DNS resolution<br/>• Security group rules]:::vpcendpoint
+    
+    MWAAAPI[⚡ MWAA REST API<br/>• DAG operations<br/>• Task management<br/>• Configuration access<br/>• Monitoring endpoints]:::mwaaapi
+    
+    APP --> APPCREDS
+    APPCREDS --> AWSSTS
+    AWSSTS --> IAMAPIROLE
+    IAMAPIROLE --> APIGATEWAY
+    APIGATEWAY --> VPCENDPOINT
+    VPCENDPOINT --> MWAAAPI
+    
+    classDef app fill:#FF6B35,stroke:#FF4500,stroke-width:3px,color:#fff
+    classDef appcreds fill:#FFD700,stroke:#FFA500,stroke-width:3px,color:#000
+    classDef awssts fill:#4ECDC4,stroke:#20B2AA,stroke-width:3px,color:#fff
+    classDef iamapirole fill:#45B7D1,stroke:#1E90FF,stroke-width:3px,color:#fff
+    classDef apigateway fill:#96CEB4,stroke:#32CD32,stroke-width:3px,color:#fff
+    classDef vpcendpoint fill:#FF9F43,stroke:#E67E22,stroke-width:3px,color:#fff
+    classDef mwaaapi fill:#FF9FF3,stroke:#FF69B4,stroke-width:3px,color:#fff
+```
+
+### 🔄 **Unified Federated Access Flow**
+
+```mermaid
+graph TB
+    USERS[👥 Corporate Users<br/>• Data scientists<br/>• DevOps engineers<br/>• Business analysts<br/>• System administrators]:::users
+    
+    SYSTEMS[🤖 Automated Systems<br/>• GitLab CI/CD<br/>• Jenkins pipelines<br/>• Monitoring tools<br/>• Custom applications]:::systems
+    
+    FEDERATION[🌐 Federation Layer<br/>• AWS SSO integration<br/>• SAML assertions<br/>• OAuth 2.0 flows<br/>• Token exchange]:::federation
+    
+    ACCESSCONTROL[🛡️ Access Control<br/>• Role-based permissions<br/>• Attribute-based policies<br/>• Conditional access<br/>• Just-in-time access]:::accesscontrol
+    
+    MWAAENV[🏭 MWAA Environment<br/>• Private web server<br/>• REST API endpoints<br/>• Scheduler service<br/>• Worker nodes]:::mwaaenv
+    
+    AUDIT[📊 Audit & Monitoring<br/>• CloudTrail logging<br/>• Access analytics<br/>• Compliance reporting<br/>• Security monitoring]:::audit
+    
+    USERS --> FEDERATION
+    SYSTEMS --> FEDERATION
+    FEDERATION --> ACCESSCONTROL
+    ACCESSCONTROL --> MWAAENV
+    MWAAENV --> AUDIT
+    
+    classDef users fill:#FF6B35,stroke:#FF4500,stroke-width:3px,color:#fff
+    classDef systems fill:#32CD32,stroke:#228B22,stroke-width:3px,color:#fff
+    classDef federation fill:#FFD700,stroke:#FFA500,stroke-width:3px,color:#000
+    classDef accesscontrol fill:#45B7D1,stroke:#1E90FF,stroke-width:3px,color:#fff
+    classDef mwaaenv fill:#FF9FF3,stroke:#FF69B4,stroke-width:3px,color:#fff
+    classDef audit fill:#9B59B6,stroke:#8E44AD,stroke-width:3px,color:#fff
+``` 
